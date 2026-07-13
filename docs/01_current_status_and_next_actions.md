@@ -10,38 +10,48 @@ This repository is a separate learning and portfolio programme for production da
 
 ## Active lesson
 
-**Relational database foundations**
+**PostgreSQL installation and first local connection**
 
-The immediate objective is to establish a precise understanding of:
+The relational foundations have already been introduced conceptually. The immediate objective is now to install the local tools and connect to a real PostgreSQL server before creating the first project database.
 
-- database
-- database management system
-- PostgreSQL
-- schema
-- table
-- row
-- column
-- data type
-- entity
-- primary key
-- foreign key
-- relationship
+## Concepts already introduced
+
+The following concepts have been explained conceptually, but most have not yet been practised in PostgreSQL:
+
+- database and database management system
+- PostgreSQL as a relational database management system
+- server, client, and connection
+- database, schema, table, row, column, and data type
+- entity, attribute, and row grain
+- primary, foreign, composite, natural, and surrogate keys
 - referential integrity
 - one-to-one, one-to-many, and many-to-many relationships
-- row grain
+- junction tables
+- `SELECT`
+- `FROM`
+- `*` in `SELECT *`
+- semicolon as a statement terminator
+- aliases with `AS`
+- the context-dependent meaning of `*`
+- `COUNT(*)` versus `COUNT(column)`
+- aggregate functions including `COUNT`, `AVG`, `SUM`, and `MAX`
+- `GROUP BY` and the resulting change in row grain
+- the difference between grouped aggregation and row-preserving window calculations
+- `OVER` and `PARTITION BY` in an introductory window-function example
+- relational versus non-relational database models at an introductory level
 
 ## Concepts previewed but not yet completed
 
-The following subjects appeared in introductory discussion but have not completed their formal lessons:
+The following subjects appeared in introductory discussion but still require formal lessons, guided practice, and independent application:
 
-- `COUNT(*)`
-- aggregate functions
+- aggregate functions in complete SQL queries
 - `GROUP BY`
 - window functions
 - `OVER`
 - `PARTITION BY`
-
-They should remain marked as previewed until they are explained, practised, and applied in the planned sequence.
+- document, key-value, wide-column, and graph databases
+- NoSQL consistency, replication, and distributed trade-offs
+- selection between relational and specialized data stores
 
 ## Completed setup
 
@@ -52,29 +62,33 @@ They should remain marked as previewed until they are explained, practised, and 
 - progress framework established
 - initial architecture and technology decisions recorded
 - README created
+- NoSQL and specialized data stores added to the programme
+- early relational-versus-non-relational comparison added to the SQL roadmap
 
 ## Immediate next actions
 
-1. Complete the relational database foundations lesson.
-2. Introduce the structure of the simplest SQL statement.
-3. Explain `SELECT`, `FROM`, `*`, and `;` independently.
-4. Select and install the local PostgreSQL tooling.
-5. Create the first telecom database.
+1. Install PostgreSQL Server, pgAdmin 4, and the PostgreSQL command-line tools.
+2. Verify that the local PostgreSQL server is running.
+3. Connect through pgAdmin using `localhost` and port `5432`.
+4. Confirm access to the default `postgres` database.
+5. Create the first telecom learning database.
 6. Create small `customers` and `invoices` tables.
-7. Run and explain the first queries against the local database.
-8. Add the first detailed knowledge note under `docs/knowledge_notes/sql/`.
-9. Update the competency register only after evidence is produced.
+7. Execute the already-explained basic `SELECT` queries against real tables.
+8. Continue with filtering through `WHERE` and comparison operators.
+9. Add the first detailed knowledge note under `docs/knowledge_notes/sql/`.
+10. Update the competency register only when additional evidence is produced.
 
 ## Current implementation boundary
 
-No database, pipeline, cloud service, or production application has been implemented yet. The current state is planning and conceptual preparation.
+No project database, pipeline, cloud service, or production application has been implemented yet. The current repository contains planning and conceptual documentation. PostgreSQL installation is the next practical implementation step.
 
 ## Deferred until prerequisites are ready
 
-- formal aggregation lessons
+- formal aggregation exercises
 - joins
-- window functions
+- window-function exercises
 - analytical schema design
+- hands-on NoSQL implementations
 - dbt
 - Airflow
 - Docker
