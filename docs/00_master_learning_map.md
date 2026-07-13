@@ -4,7 +4,7 @@
 
 This document defines the complete learning programme for production data and machine-learning systems. It is the stable high-level map for the repository. Detailed lesson order, exercises, and implementation requirements belong in the topic roadmaps.
 
-The programme begins with relational data and SQL, then moves through data modelling, pipelines, storage platforms, orchestration, software delivery, MLOps, cloud services, distributed processing, streaming, and production infrastructure. The ordering is intentional. Later subjects depend on concepts established earlier.
+The programme begins with relational data and SQL, then moves through data modelling, pipelines, storage platforms, orchestration, software delivery, MLOps, cloud services, NoSQL and specialized data stores, distributed processing, streaming, and production infrastructure. The ordering is intentional. Later subjects depend on concepts established earlier.
 
 ## Guiding principle
 
@@ -13,6 +13,8 @@ A technology should be introduced only after the underlying problem is understoo
 Examples:
 
 - PostgreSQL is introduced after tables, keys, relationships, and SQL are understood.
+- Relational and non-relational systems are compared before a specialized store is selected.
+- A document, key-value, graph, search, time-series, or vector store is introduced only when a workload motivates its data model.
 - dbt is introduced after SQL transformations and analytical modelling are understood.
 - Airflow is introduced after individual pipeline tasks can be implemented.
 - Docker is introduced after a working application exists.
@@ -56,6 +58,8 @@ Batch and online inference
 Monitoring, alerting, and retraining
 ```
 
+Specialized stores may be added beside this main flow when their workload justifies them. Examples include a key-value cache for low-latency reads, a search index for support-ticket text, a graph store for relationship traversal, a time-series store for network measurements, or a vector index for similarity retrieval.
+
 ## Phase 1: SQL and relational databases
 
 ### Central question
@@ -65,6 +69,7 @@ How do organizations store structured operational data, preserve relationships a
 ### Main subjects
 
 - databases and database management systems
+- relational versus non-relational database models
 - schemas, tables, rows, columns, and data types
 - primary keys, foreign keys, and relationships
 - SQL query structure
@@ -88,6 +93,7 @@ A local PostgreSQL database containing realistic telecom-style operational table
 ### Completion evidence
 
 - can explain relational concepts without relying on memorized syntax
+- can distinguish the relational model from major non-relational models at a high level
 - can write correct multi-table SQL independently
 - can identify and prevent join multiplication
 - can design normalized operational tables
@@ -281,7 +287,49 @@ How are the preceding local concepts implemented using managed cloud services?
 
 A cloud version of the local system with managed storage, pipelines, model training, deployment, secrets, and monitoring.
 
-## Phase 9: Spark and Databricks
+## Phase 9: NoSQL and specialized data stores
+
+### Central question
+
+When does a workload justify a non-relational or specialized storage model, and what is gained or lost relative to a relational database?
+
+### Main subjects
+
+- relational versus non-relational models
+- NoSQL as an umbrella category
+- structured, semi-structured, and unstructured data
+- document databases and MongoDB-style modelling
+- embedding versus referencing
+- key-value databases and Redis-style caching
+- wide-column databases and Cassandra-style access-pattern modelling
+- graph databases and Neo4j-style traversal
+- search-oriented stores and inverted indexes
+- time-series databases
+- vector databases and vector search
+- partitioning
+- replication
+- consistency models
+- availability and network partitions
+- distributed transactions
+- Azure Cosmos DB
+- polyglot persistence
+- synchronization and derived stores
+- security, governance, cost, and operational complexity
+
+### Practical result
+
+A comparative set of small implementations and design records showing when PostgreSQL alone is sufficient and when a document, key-value, graph, search, time-series, or vector-oriented store provides a justified benefit.
+
+### Completion evidence
+
+- can distinguish database models from product names
+- can select a storage model from workload requirements
+- can compare normalization, denormalization, and embedding
+- can explain partitioning, replication, and consistency trade-offs
+- can implement representative document, key-value, and graph workflows
+- can justify or reject a polyglot-persistence design
+
+## Phase 10: Spark and Databricks
 
 ### Central question
 
@@ -308,7 +356,7 @@ What changes when data or computation no longer fits comfortably on one machine?
 
 A distributed transformation workflow that produces the same logical analytical outputs as the local pipeline while exposing the trade-offs of distributed execution.
 
-## Phase 10: Kafka and streaming systems
+## Phase 11: Kafka and streaming systems
 
 ### Central question
 
@@ -335,7 +383,7 @@ How are continuously arriving events transported, processed, stored, and consume
 
 A small event-driven pipeline that publishes telecom events, consumes them, validates them, and writes them to an analytical destination.
 
-## Phase 11: Production infrastructure
+## Phase 12: Production infrastructure
 
 ### Central question
 
@@ -362,7 +410,7 @@ How are production services provisioned, secured, scaled, observed, and recovere
 
 A documented and reproducible deployment architecture with infrastructure definitions, monitoring, and operational procedures.
 
-## Phase 12: Integrated end-to-end project
+## Phase 13: Integrated end-to-end project
 
 The final phase combines the preceding work into one portfolio-ready system.
 
@@ -376,6 +424,8 @@ The final phase combines the preceding work into one portfolio-ready system.
 - tracked model training
 - registered model artifacts
 - batch and online predictions
+- justified specialized stores where appropriate
+- synchronization and rebuild procedures for derived stores
 - containerized services
 - cloud deployment
 - monitoring and alerting
@@ -400,6 +450,7 @@ The following skills are developed throughout all phases:
 - documentation
 - architecture reasoning
 - communication of trade-offs
+- workload-based technology selection
 
 ## Review policy
 
