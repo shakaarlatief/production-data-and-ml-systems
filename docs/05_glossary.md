@@ -78,6 +78,188 @@ A group of database operations treated as one logical unit. A successful transac
 
 An additional data structure that can help the database locate rows efficiently, at the cost of storage and additional work during writes.
 
+## Non-relational and specialized storage terms
+
+### Non-relational database
+
+A database whose primary logical model is not the traditional relational model of relations, keys, and relational operations. Non-relational databases include several distinct families rather than one single alternative model.
+
+### NoSQL
+
+A broad label for database systems that do not rely exclusively on the traditional relational model. The term is often interpreted as "not only SQL" because some systems support SQL-like query languages and some relational systems support non-relational data structures.
+
+### Structured data
+
+Data organized according to an explicit and regular schema, such as rows and typed columns in a relational table.
+
+### Semi-structured data
+
+Data that contains recognizable fields or tags but may allow records to vary in shape, such as JSON documents.
+
+### Unstructured data
+
+Data without a fixed tabular or field-based structure, such as free text, images, audio, or video. Metadata about unstructured data may still be structured.
+
+### Schema-on-write
+
+An approach in which data must satisfy a defined structure before or while it is written to a system.
+
+### Schema-on-read
+
+An approach in which structure is interpreted when data is read. The stored data may still have conventions and validation rules even when the structure is not enforced at ingestion.
+
+### Document database
+
+A database that stores records as self-contained documents, commonly using JSON-like objects with fields, nested objects, and arrays.
+
+### Document
+
+A self-contained record in a document database. A document usually contains a unique identifier and a set of fields that may include nested values.
+
+### Collection
+
+A named group of documents in a document database. A collection is not identical to a relational table because documents may have different field structures.
+
+### Embedding
+
+Storing related data inside a parent document rather than placing it in a separate record and joining or looking it up later. In machine learning, the word embedding also has a different meaning: a numerical vector representation.
+
+### Referencing in a document model
+
+Storing an identifier that points to another document rather than embedding the related data directly.
+
+### Key-value database
+
+A database that retrieves values primarily through unique keys. The value may be text, bytes, a structured object, or a specialized data structure.
+
+### Cache
+
+A fast temporary storage layer that keeps copies of data so repeated requests can be served more quickly than by recomputing or rereading the authoritative source.
+
+### Time to live
+
+A duration after which a stored item, commonly a cache entry, expires automatically. It is often abbreviated as TTL.
+
+### Cache invalidation
+
+The process of removing or updating cached data when the authoritative value changes or the cached copy is no longer trustworthy.
+
+### Wide-column database
+
+A distributed database model that organizes data around partition keys, clustering order, and flexible column families. Tables are commonly designed from known access patterns rather than from normalization goals.
+
+### Column family
+
+A logical grouping of related columns in a wide-column database. The exact implementation differs across products.
+
+### Graph database
+
+A database designed to store and traverse entities and their relationships directly, often using nodes, relationships, labels, and properties.
+
+### Node
+
+An entity or object represented in a graph database.
+
+### Relationship
+
+A directed or undirected connection between graph nodes. A relationship may have a type and its own properties.
+
+### Property graph
+
+A graph model in which nodes and relationships can contain named properties and labels or types.
+
+### Search-oriented data store
+
+A system optimized for indexing and retrieving text or other fields through search operations, filtering, and relevance ranking.
+
+### Inverted index
+
+A search structure that maps terms to the documents containing them, enabling efficient full-text retrieval.
+
+### Time-series database
+
+A database optimized for timestamped measurements or events, often supporting high write rates, time-based partitioning, retention, compression, and windowed aggregation.
+
+### Vector
+
+An ordered numerical array. In similarity-search systems, a vector commonly represents the semantic or statistical characteristics of an item.
+
+### Machine-learning embedding
+
+A learned or generated vector representation of an object such as text, an image, a product, or a user.
+
+### Vector database
+
+A database or specialized storage system designed to store vectors and retrieve nearby vectors according to a similarity or distance measure. Similar capabilities may also be provided by relational databases and search engines through extensions.
+
+### Vector search
+
+Retrieving items whose vectors are most similar to a query vector.
+
+### Approximate nearest-neighbor search
+
+A search method that accepts a possible reduction in exactness to retrieve similar vectors more quickly or with less computational cost. It is often abbreviated as ANN search.
+
+### Polyglot persistence
+
+Using multiple data-storage technologies in one system because different workloads benefit from different data models or performance characteristics.
+
+### Source of truth
+
+The authoritative system or dataset whose value is treated as the official current record for a particular fact.
+
+### Derived store
+
+A database, index, cache, or table built from an authoritative source to support a particular access pattern. It should be possible to reconcile or rebuild a derived store when necessary.
+
+### Partitioning
+
+Dividing data into subsets so that storage and processing can be distributed. The word is also used in file systems, Spark, Kafka, and relational databases, with system-specific details.
+
+### Partition key
+
+A value used to determine which partition stores a record or event.
+
+### Replication
+
+Maintaining copies of data on multiple nodes or locations for availability, read scaling, geographic distribution, or recovery.
+
+### Replica
+
+One copy of replicated data maintained by a database or distributed system.
+
+### Replication lag
+
+The delay between a change on one copy and its appearance on another copy.
+
+### Strong consistency
+
+A consistency guarantee under which a read observes the latest completed write according to the system's defined ordering guarantees.
+
+### Eventual consistency
+
+A model in which replicas may temporarily return different values but are expected to converge when no new updates occur.
+
+### Tunable consistency
+
+A system design in which clients can choose among different consistency or acknowledgement levels for particular operations.
+
+### Network partition
+
+A communication failure that prevents some nodes in a distributed system from reaching other nodes even though the nodes themselves may still be running.
+
+### CAP theorem
+
+A result about distributed data systems stating that, during a network partition, a system cannot simultaneously guarantee both complete availability and linearizable consistency. It is not a complete database-selection framework.
+
+### Quorum
+
+A required subset of replicas that must participate in a read or write before the operation is considered successful.
+
+### Hot partition
+
+A partition that receives disproportionately high traffic or data volume and therefore becomes a performance bottleneck.
+
 ## SQL terms
 
 ### SQL
