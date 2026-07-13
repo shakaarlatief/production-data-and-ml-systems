@@ -73,9 +73,33 @@ Each query should be studied using:
 - many-to-many
 - bridge tables
 
+### Lesson 4A: Relational and non-relational database models
+
+This comparison is introduced early so that PostgreSQL is understood as a deliberate first choice rather than as the only possible database model.
+
+- the relational model as the baseline
+- non-relational as an umbrella category
+- the meaning and limitations of the term NoSQL
+- why non-relational does not mean that relationships are absent
+- structured, semi-structured, and unstructured data
+- document databases
+- key-value databases
+- wide-column databases
+- graph databases
+- search-oriented data stores
+- time-series databases
+- vector databases and vector search
+- normalization versus denormalization and embedding
+- joins versus nested documents and application-side composition
+- strong consistency, eventual consistency, and replication as introductory concepts
+- polyglot persistence
+- workload-based technology selection
+- why PostgreSQL remains the first hands-on database
+- connection to `12_nosql_and_specialized_data_stores.md`
+
 ### Foundation milestone
 
-Draw and explain a small model containing customers, contracts, invoices, and payments. State the grain and key of every table.
+Draw and explain a small model containing customers, contracts, invoices, and payments. State the grain and key of every table. Then explain at a high level how a document-oriented representation might differ and why the relational design remains appropriate for the first implementation.
 
 ## Part B: Reading one table
 
@@ -567,6 +591,8 @@ Combine:
 The phase is complete when the learner can:
 
 - explain relational concepts accurately
+- distinguish relational databases from the major non-relational database families at an introductory level
+- explain why PostgreSQL is the correct first implementation for this phase
 - use PostgreSQL independently
 - write and debug multi-table SQL
 - predict join cardinality
