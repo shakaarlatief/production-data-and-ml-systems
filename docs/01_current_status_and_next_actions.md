@@ -12,9 +12,11 @@ The SQL and relational-database foundation has reached the checkpoint needed to 
 
 ## Active lesson
 
-**ETL foundations and local development preparation**
+**Real-file extraction, source profiling, and staging-table design**
 
-The immediate objective is to understand how a pipeline moves data between sources and targets, then prepare a small local Python-to-PostgreSQL workflow. The first implementation should expose each step clearly before higher-level frameworks are introduced.
+The first practical ETL case study uses official January 2025 Jersey City Citi Bike trip-history data. The immediate objective is to profile the real source carefully, convert the observed source properties into explicit data-quality rules, and design the first PostgreSQL staging layer before loading records.
+
+The implementation remains intentionally transparent. Direct Python, the standard library, Psycopg 3, PostgreSQL, and explicit SQL are used before introducing higher-level data-processing, orchestration, warehouse, container, or cloud abstractions.
 
 ## SQL checkpoint reached
 
@@ -43,16 +45,49 @@ The following areas have been explained and, in many cases, practised interactiv
 
 - PostgreSQL 18 is installed locally and running.
 - pgAdmin 4 is connected to the local PostgreSQL server.
-- The `telecom_operations` database exists.
-- The `operational` and `analytics` schemas exist.
-- Small `customers` and `invoices` tables have been created and queried.
-- Constraints, foreign keys, data types, transactions, views, and indexes have been explored interactively.
+- The earlier `telecom_operations` learning database remains available for SQL practice.
+- A Python 3.11 virtual environment has been created for this repository.
+- Psycopg 3 and python-dotenv have been installed in the virtual environment.
+- Local database credentials are loaded from an ignored `.env` file.
+- Python-to-PostgreSQL connectivity has been verified successfully.
+- A dedicated `bike_share_etl` database has been created.
+- The `source`, `staging`, and `analytics` schemas have been created inside `bike_share_etl`.
+- The official January 2025 Jersey City Citi Bike trip-history archive has been downloaded locally.
+- Raw data under `data/raw/` is excluded from Git.
+- The extracted source file has been inspected with Python.
+
+## Initial source evidence
+
+The first source file is:
+
+`JC-202501-citibike-tripdata.csv`
+
+Observed grain:
+
+`one row per recorded bicycle ride`
+
+Observed structure:
+
+- 50,611 data rows
+- 13 columns
+- ride identifiers, bicycle type, start and end timestamps, start and end station information, coordinates, and membership category
+
+Observed missingness:
+
+| Column | Missing rows | Missing percentage |
+|---|---:|---:|
+| `end_station_name` | 107 | 0.21% |
+| `end_station_id` | 132 | 0.26% |
+| `end_lat` | 19 | 0.04% |
+| `end_lng` | 19 | 0.04% |
+
+No missing values were observed in the other columns during the initial inspection.
 
 ## Evidence boundary
 
 The SQL phase was primarily a learning and guided-practice phase. Interactive statements executed in pgAdmin were not automatically treated as repository deliverables.
 
-The current evidence supports conceptual understanding and guided use of the main SQL and relational-database topics. It does not yet support claims that every topic has been independently applied, reviewed after a delay, or implemented as a portfolio-ready database project.
+The current ETL evidence now includes a functioning local Python environment, a verified PostgreSQL connection, a dedicated database, initial schema separation, reproducible access to a real public source file, and a source-inspection program. This does not yet support claims that a complete ETL pipeline, transactional batch load, rejection workflow, idempotent rerun mechanism, automated test suite, or scheduled workflow exists.
 
 ## Repository inclusion rule
 
@@ -70,19 +105,22 @@ This rule applies to SQL, ETL, and all later phases.
 
 ## Immediate next actions
 
-1. Introduce extraction, transformation, loading, ETL versus ELT, batch processing, and pipeline stages.
-2. Explain full refresh, incremental loading, idempotency, checkpoints, and watermarks.
-3. Verify the existing Python installation and create a local virtual environment when implementation begins.
-4. Install only the initial packages needed for a transparent local Python-to-PostgreSQL example.
-5. Build a small exploratory pipeline that extracts data, applies explicit transformations, validates the result, and loads it transactionally.
-6. Decide during development which parts are worth preserving in the repository.
-7. Add testing, logging, configuration, and failure handling after the first transparent pipeline works.
+1. Profile ride identifiers, categorical values, timestamps, coordinates, duration behavior, and duplicate rows.
+2. Decide which source properties are contractual requirements and which are observed but not guaranteed.
+3. Define explicit validation rules and rejected-record reasons.
+4. Design the first staging table from the evidence rather than from assumptions.
+5. Implement extraction and parsing functions that preserve the raw source file.
+6. Load the first batch transactionally into PostgreSQL.
+7. Reconcile source, valid, rejected, and loaded row counts.
+8. Make reruns safe and deterministic.
+9. Add logging, tests, and configuration validation after the first transparent load works.
+10. Decide which implementation files form the first coherent repository milestone.
 
 ## Current implementation boundary
 
-A local PostgreSQL learning database exists and has been used interactively. No Python ETL pipeline, scheduled workflow, cloud resource, or production application has been implemented yet.
+The repository now contains the beginning of a local ETL implementation rather than planning documents alone. The completed work covers environment setup, secure local configuration, database connectivity, real-source acquisition, and initial source inspection.
 
-The repository currently remains primarily a planning and progress-tracking repository. ETL code and supporting project structure should be added only when a coherent implementation is ready to preserve.
+No production-ready ETL package, final relational model, scheduled workflow, cloud resource, containerized service, or machine-learning pipeline has been completed yet.
 
 ## Deferred until prerequisites are ready
 
