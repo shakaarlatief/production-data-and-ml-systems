@@ -35,6 +35,7 @@ The repository follows several principles:
 - Local implementations are developed before equivalent cloud implementations where possible.
 - Storage technologies are selected from workload requirements rather than from a relational-versus-NoSQL slogan.
 - Documentation is written as a standalone technical reference that can be revisited later.
+- Exploratory exercises are not committed automatically. Repository artifacts are selected deliberately when they form a reusable implementation, meaningful milestone, polished example, or part of the integrated system.
 
 ## Repository documentation
 
@@ -51,7 +52,11 @@ The main planning and coordination documents are located in `docs/`:
 
 ## Current phase
 
-The active phase is SQL and relational databases. The first objective is to build a rigorous foundation in relational data, PostgreSQL, SQL querying, data integrity, database design, and the construction of analytical and machine-learning datasets from normalized operational tables. An early comparison with non-relational database models is included so that PostgreSQL is understood as a deliberate first choice rather than as the only database category.
+The active phase is ETL, ELT, and data pipelines.
+
+The SQL and relational-database foundation has reached the checkpoint required to continue. PostgreSQL 18 and pgAdmin have been used locally with a small `telecom_operations` database, operational and analytical schemas, related customer and invoice tables, constraints, transactions, reusable query objects, indexes, and analytical transformations.
+
+This checkpoint represents conceptual understanding and guided practice rather than complete independent mastery or a finished portfolio database. The next objective is to understand pipeline architecture and build a transparent local Python-to-PostgreSQL workflow before introducing orchestration, warehouse tooling, containers, or cloud services.
 
 ## Intended result
 
