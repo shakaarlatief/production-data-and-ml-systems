@@ -20,6 +20,24 @@ The project represents a simplified telecommunications organization. It will con
 
 The theme provides continuity across SQL, data engineering, cloud, and MLOps without reusing the existing Telco Customer Churn modelling repository.
 
+## Relationship to focused learning implementations
+
+Individual phases may use smaller external datasets when they provide a clearer and more realistic way to learn a particular capability.
+
+The initial ETL implementation uses official Citi Bike trip-history data to develop file ingestion, source profiling, validation, staging, transactional loading, reconciliation, logging, testing, and rerun safety. This focused case study does not replace the telecommunications theme of the long-term integrated system.
+
+The distinction is:
+
+```text
+Citi Bike ETL case study
+    -> focused implementation for the current ETL phase
+
+Telecommunications system
+    -> long-term integrated architecture across all phases
+```
+
+Reusable design patterns, code structure, tests, operational practices, and lessons from the Citi Bike implementation may later be transferred into the integrated telecommunications system.
+
 ## Architectural principle
 
 The system begins locally and grows toward managed cloud infrastructure.
@@ -270,4 +288,4 @@ The final architecture should address:
 
 ## Current architecture status
 
-Only the conceptual architecture exists. The current implementation scope is the first local relational system.
+The long-term telecommunications architecture remains conceptual. A focused local implementation has begun through the Citi Bike ETL case study, which is currently providing the first concrete evidence for Stage 2 capabilities such as source acquisition, Python-to-PostgreSQL connectivity, source profiling, validation design, and layered storage.
