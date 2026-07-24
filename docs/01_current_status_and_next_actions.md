@@ -6,94 +6,97 @@ This repository is a separate learning and portfolio programme for production da
 
 ## Active phase
 
-**Phase 1: SQL and relational databases**
+**Phase 3: ETL, ELT, and data pipelines**
+
+The SQL and relational-database foundation has reached the checkpoint needed to begin pipeline work. This does not mean that every advanced PostgreSQL topic has been completed or independently mastered. It means that the required concepts for understanding extraction, transformation, loading, transactions, validation, and database-backed pipelines have been introduced and practised sufficiently to continue.
 
 ## Active lesson
 
-**PostgreSQL installation and first local connection**
+**ETL foundations and local development preparation**
 
-The relational foundations have already been introduced conceptually. The immediate objective is now to install the local tools and connect to a real PostgreSQL server before creating the first project database.
+The immediate objective is to understand how a pipeline moves data between sources and targets, then prepare a small local Python-to-PostgreSQL workflow. The first implementation should expose each step clearly before higher-level frameworks are introduced.
 
-## Concepts already introduced
+## SQL checkpoint reached
 
-The following concepts have been explained conceptually, but most have not yet been practised in PostgreSQL:
+The following areas have been explained and, in many cases, practised interactively in PostgreSQL and pgAdmin:
 
-- database and database management system
-- PostgreSQL as a relational database management system
-- server, client, and connection
-- database, schema, table, row, column, and data type
-- entity, attribute, and row grain
-- primary, foreign, composite, natural, and surrogate keys
-- referential integrity
+- PostgreSQL server, client, connection, database, schema, table, row, column, and data type
+- row grain, entities, attributes, primary keys, foreign keys, and referential integrity
 - one-to-one, one-to-many, and many-to-many relationships
-- junction tables
-- `SELECT`
-- `FROM`
-- `*` in `SELECT *`
-- semicolon as a statement terminator
-- aliases with `AS`
-- the context-dependent meaning of `*`
-- `COUNT(*)` versus `COUNT(column)`
-- aggregate functions including `COUNT`, `AVG`, `SUM`, and `MAX`
-- `GROUP BY` and the resulting change in row grain
-- the difference between grouped aggregation and row-preserving window calculations
-- `OVER` and `PARTITION BY` in an introductory window-function example
 - relational versus non-relational database models at an introductory level
+- `SELECT`, aliases, expressions, filtering, sorting, limiting, and `DISTINCT`
+- missing-value handling and SQL three-valued logic
+- aggregate functions, `GROUP BY`, `HAVING`, and conditional aggregation
+- `INNER JOIN`, `LEFT JOIN`, `CROSS JOIN`, join conditions, row multiplication, and anti-joins
+- subqueries, correlated subqueries, `IN`, `EXISTS`, `NOT EXISTS`, and common table expressions
+- window functions, partitioning, ranking, running totals, `LAG`, and `LEAD`
+- `UNION`, `UNION ALL`, `INTERSECT`, and `EXCEPT`
+- text functions, casting, arithmetic, date arithmetic, `EXTRACT`, `DATE_TRUNC`, and intervals
+- `INSERT`, `UPDATE`, `DELETE`, `RETURNING`, `INSERT ... SELECT`, and upserts
+- transactions, rollback, savepoints, and the ACID properties
+- views, materialized views, temporary tables, and permanent tables
+- indexes, composite index order, `EXPLAIN`, `EXPLAIN ANALYZE`, and planner statistics
+- normalization, denormalization, insertion, update, and deletion anomalies
+- operational versus analytical table design and a simple SQL-to-ETL bridge
 
-## Concepts previewed but not yet completed
+## Practical environment completed
 
-The following subjects appeared in introductory discussion but still require formal lessons, guided practice, and independent application:
+- PostgreSQL 18 is installed locally and running.
+- pgAdmin 4 is connected to the local PostgreSQL server.
+- The `telecom_operations` database exists.
+- The `operational` and `analytics` schemas exist.
+- Small `customers` and `invoices` tables have been created and queried.
+- Constraints, foreign keys, data types, transactions, views, and indexes have been explored interactively.
 
-- aggregate functions in complete SQL queries
-- `GROUP BY`
-- window functions
-- `OVER`
-- `PARTITION BY`
-- document, key-value, wide-column, and graph databases
-- NoSQL consistency, replication, and distributed trade-offs
-- selection between relational and specialized data stores
+## Evidence boundary
 
-## Completed setup
+The SQL phase was primarily a learning and guided-practice phase. Interactive statements executed in pgAdmin were not automatically treated as repository deliverables.
 
-- repository created
-- master learning map established
-- detailed topic roadmaps established
-- documentation roles established
-- progress framework established
-- initial architecture and technology decisions recorded
-- README created
-- NoSQL and specialized data stores added to the programme
-- early relational-versus-non-relational comparison added to the SQL roadmap
+The current evidence supports conceptual understanding and guided use of the main SQL and relational-database topics. It does not yet support claims that every topic has been independently applied, reviewed after a delay, or implemented as a portfolio-ready database project.
+
+## Repository inclusion rule
+
+Exploratory code, exercises, and temporary experiments are not added to the repository automatically.
+
+A repository artifact is added only after a deliberate decision that it is useful as one of the following:
+
+- a reusable implementation
+- a meaningful project milestone
+- a polished technical example
+- documentation worth preserving
+- part of the eventual integrated system
+
+This rule applies to SQL, ETL, and all later phases.
 
 ## Immediate next actions
 
-1. Install PostgreSQL Server, pgAdmin 4, and the PostgreSQL command-line tools.
-2. Verify that the local PostgreSQL server is running.
-3. Connect through pgAdmin using `localhost` and port `5432`.
-4. Confirm access to the default `postgres` database.
-5. Create the first telecom learning database.
-6. Create small `customers` and `invoices` tables.
-7. Execute the already-explained basic `SELECT` queries against real tables.
-8. Continue with filtering through `WHERE` and comparison operators.
-9. Add the first detailed knowledge note under `docs/knowledge_notes/sql/`.
-10. Update the competency register only when additional evidence is produced.
+1. Introduce extraction, transformation, loading, ETL versus ELT, batch processing, and pipeline stages.
+2. Explain full refresh, incremental loading, idempotency, checkpoints, and watermarks.
+3. Verify the existing Python installation and create a local virtual environment when implementation begins.
+4. Install only the initial packages needed for a transparent local Python-to-PostgreSQL example.
+5. Build a small exploratory pipeline that extracts data, applies explicit transformations, validates the result, and loads it transactionally.
+6. Decide during development which parts are worth preserving in the repository.
+7. Add testing, logging, configuration, and failure handling after the first transparent pipeline works.
 
 ## Current implementation boundary
 
-No project database, pipeline, cloud service, or production application has been implemented yet. The current repository contains planning and conceptual documentation. PostgreSQL installation is the next practical implementation step.
+A local PostgreSQL learning database exists and has been used interactively. No Python ETL pipeline, scheduled workflow, cloud resource, or production application has been implemented yet.
+
+The repository currently remains primarily a planning and progress-tracking repository. ETL code and supporting project structure should be added only when a coherent implementation is ready to preserve.
 
 ## Deferred until prerequisites are ready
 
-- formal aggregation exercises
-- joins
-- window-function exercises
-- analytical schema design
-- hands-on NoSQL implementations
+- advanced PostgreSQL administration
+- recursive CTEs
+- triggers and stored procedures
+- deep transaction-isolation and locking analysis
+- partitioning and advanced index types
 - dbt
-- Airflow
+- Airflow or another orchestrator
 - Docker
 - MLflow
 - Azure
+- NoSQL implementations
 - Spark
 - Kafka
 - Kubernetes
@@ -101,4 +104,4 @@ No project database, pipeline, cloud service, or production application has been
 
 ## Update rule
 
-This document is the tactical source of truth. It should be updated whenever the active lesson, immediate next action, or implementation boundary changes.
+This document is the tactical source of truth. It should be updated whenever the active lesson, immediate next action, implementation boundary, or repository inclusion decision changes.
