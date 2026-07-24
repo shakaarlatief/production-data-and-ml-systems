@@ -6,7 +6,6 @@ import pytest
 
 from bike_share_etl.validate_citibike_raw import normalize_text, validate_raw_row
 
-
 FIXTURE_FILE = (
     Path(__file__).parent
     / "fixtures"

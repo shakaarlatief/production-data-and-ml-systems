@@ -5,7 +5,6 @@ from datetime import datetime
 from pathlib import Path
 from statistics import median
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 DATA_FILE = (
