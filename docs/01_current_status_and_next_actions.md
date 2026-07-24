@@ -8,15 +8,15 @@ This repository is a separate learning and portfolio programme for production da
 
 **Phase 3: ETL, ELT, and data pipelines**
 
-The SQL and relational-database foundation has reached the checkpoint needed to begin pipeline work. This does not mean that every advanced PostgreSQL topic has been completed or independently mastered. It means that the required concepts for understanding extraction, transformation, loading, transactions, validation, and database-backed pipelines have been introduced and practised sufficiently to continue.
+The SQL and relational-database foundation has reached the checkpoint needed to continue pipeline work. This does not mean that every advanced PostgreSQL topic has been completed or independently mastered. It means that the required concepts for understanding extraction, transformation, loading, transactions, validation, and database-backed pipelines have been introduced and practised sufficiently to continue.
 
 ## Active lesson
 
-**Real-file extraction, source profiling, and staging-table design**
+**Automated validation, pipeline observability, and analytics-layer design**
 
-The first practical ETL case study uses official January 2025 Jersey City Citi Bike trip-history data. The immediate objective is to profile the real source carefully, convert the observed source properties into explicit data-quality rules, and design the first PostgreSQL staging layer before loading records.
+The first practical ETL case study now has a functioning raw landing layer and a validated staging layer built from official January 2025 Jersey City Citi Bike trip-history data.
 
-The implementation remains intentionally transparent. Direct Python, the standard library, Psycopg 3, PostgreSQL, and explicit SQL are used before introducing higher-level data-processing, orchestration, warehouse, container, or cloud abstractions.
+The immediate objective is to strengthen the pipeline through controlled tests, structured logging, reusable configuration, and an explicit analytics-layer model. The implementation remains intentionally transparent: direct Python, the standard library, Psycopg 3, PostgreSQL, and explicit SQL are used before higher-level orchestration, warehouse, container, or cloud abstractions are introduced.
 
 ## SQL checkpoint reached
 
@@ -54,9 +54,8 @@ The following areas have been explained and, in many cases, practised interactiv
 - The `source`, `staging`, and `analytics` schemas have been created inside `bike_share_etl`.
 - The official January 2025 Jersey City Citi Bike trip-history archive has been downloaded locally.
 - Raw data under `data/raw/` is excluded from Git.
-- The extracted source file has been inspected with Python.
 
-## Initial source evidence
+## Source evidence
 
 The first source file is:
 
@@ -72,22 +71,103 @@ Observed structure:
 - 13 columns
 - ride identifiers, bicycle type, start and end timestamps, start and end station information, coordinates, and membership category
 
-Observed missingness:
+Key profiling results:
 
-| Column | Missing rows | Missing percentage |
-|---|---:|---:|
-| `end_station_name` | 107 | 0.21% |
-| `end_station_id` | 132 | 0.26% |
-| `end_lat` | 19 | 0.04% |
-| `end_lng` | 19 | 0.04% |
+- all 50,611 ride identifiers are unique
+- no exact duplicate rows were found
+- all timestamps parse successfully
+- no nonpositive trip durations were found
+- 21 trips exceed 24 hours
+- 25 missing end-station identifiers can be inferred uniquely from station names
+- 107 rows remain without a resolved end station
+- 19 rows have no end coordinates
+- all non-missing coordinates are finite and geographically valid
+- station identifier `JC075` appears with two name variants
 
-No missing values were observed in the other columns during the initial inspection.
+## Raw landing layer completed
+
+The repository now contains reproducible raw-layer DDL and a transactional ingestion program.
+
+Implemented tables:
+
+- `source.citibike_file`
+- `source.citibike_trip_raw`
+
+Implemented behavior:
+
+- SHA-256 file identity
+- source-file manifest metadata
+- immutable raw source values stored as text
+- source-row lineage through `(file_id, source_row_number)`
+- bulk loading through PostgreSQL `COPY`
+- transactional rollback behavior
+- source-to-database row-count reconciliation
+- idempotent rerun handling
+
+Observed result:
+
+| Measure | Count |
+|---|---:|
+| Manifest source rows | 50,611 |
+| Raw database rows | 50,611 |
+| Second-run duplicate rows inserted | 0 |
+
+## Validated staging layer completed
+
+Implemented tables:
+
+- `staging.citibike_trip_valid`
+- `staging.citibike_trip_rejected`
+
+The validation program parses timestamps and coordinates, checks required values and accepted categories, calculates trip duration, separates hard rejection rules from soft quality conditions, preserves source lineage, and distinguishes provider-supplied station identifiers from deterministically inferred identifiers.
+
+Observed result from two identical validation executions:
+
+| Measure | Count |
+|---|---:|
+| Raw rows | 50,611 |
+| Valid rows | 50,611 |
+| Rejected rows | 0 |
+| Reconciliation | 50,611 + 0 = 50,611 |
+
+Observed quality flags among accepted rows:
+
+| Quality flag | Count |
+|---|---:|
+| Missing resolved end station | 107 |
+| End-station identifier inferred from station name | 25 |
+| Trip longer than 24 hours | 21 |
+| Missing end coordinates | 19 |
+
+The second execution reproduced the same result without appending duplicate staging rows.
 
 ## Evidence boundary
 
-The SQL phase was primarily a learning and guided-practice phase. Interactive statements executed in pgAdmin were not automatically treated as repository deliverables.
+The repository now contains a functioning local batch ETL foundation rather than planning documents alone.
 
-The current ETL evidence now includes a functioning local Python environment, a verified PostgreSQL connection, a dedicated database, initial schema separation, reproducible access to a real public source file, and a source-inspection program. This does not yet support claims that a complete ETL pipeline, transactional batch load, rejection workflow, idempotent rerun mechanism, automated test suite, or scheduled workflow exists.
+Evidence supports claims that the case study includes:
+
+- real-file source profiling
+- reproducible PostgreSQL raw-table creation
+- transactional raw ingestion
+- SHA-256-based idempotent reruns
+- explicit valid and rejected staging outcomes
+- hard validation rules and soft quality flags
+- deterministic source-value enrichment with lineage preservation
+- raw-to-staging reconciliation
+- rerun-safe staging replacement for one file
+
+Evidence does not yet support claims that the repository includes:
+
+- comprehensive automated tests
+- structured production logging
+- persistent pipeline-run metadata
+- a completed analytical model
+- orchestration
+- containerization
+- cloud deployment
+- distributed processing
+- production monitoring
 
 ## Repository inclusion rule
 
@@ -105,22 +185,20 @@ This rule applies to SQL, ETL, and all later phases.
 
 ## Immediate next actions
 
-1. Profile ride identifiers, categorical values, timestamps, coordinates, duration behavior, and duplicate rows.
-2. Decide which source properties are contractual requirements and which are observed but not guaranteed.
-3. Define explicit validation rules and rejected-record reasons.
-4. Design the first staging table from the evidence rather than from assumptions.
-5. Implement extraction and parsing functions that preserve the raw source file.
-6. Load the first batch transactionally into PostgreSQL.
-7. Reconcile source, valid, rejected, and loaded row counts.
-8. Make reruns safe and deterministic.
-9. Add logging, tests, and configuration validation after the first transparent load works.
-10. Decide which implementation files form the first coherent repository milestone.
+1. Add controlled synthetic fixtures for each hard rejection rule.
+2. Add automated tests for parsing, validation, reconciliation, and rerun behavior.
+3. Add structured logging and a persistent pipeline-run table.
+4. Centralize shared path, environment, and database-connection logic.
+5. Design analytical trip and station models with explicit grains.
+6. Build the first analytics-layer transformation from validated records.
+7. Add a second monthly file to test cross-file uniqueness and multi-file processing.
+8. Introduce reproducible dependency metadata, formatting, linting, and test commands.
 
 ## Current implementation boundary
 
-The repository now contains the beginning of a local ETL implementation rather than planning documents alone. The completed work covers environment setup, secure local configuration, database connectivity, real-source acquisition, and initial source inspection.
+The completed implementation covers environment setup, secure local configuration, database connectivity, real-source acquisition, detailed source profiling, raw landing, typed validation, accepted and rejected outcomes, transactional bulk loading, deterministic reruns, and row-count reconciliation.
 
-No production-ready ETL package, final relational model, scheduled workflow, cloud resource, containerized service, or machine-learning pipeline has been completed yet.
+No production-ready package, final analytical model, scheduled workflow, cloud resource, containerized service, distributed pipeline, or machine-learning system has been completed yet.
 
 ## Deferred until prerequisites are ready
 

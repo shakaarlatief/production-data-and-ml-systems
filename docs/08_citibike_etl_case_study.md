@@ -20,7 +20,7 @@ The Citi Bike trip-history archive provides a realistic foundation for learning 
 - clear analytical outputs
 - a future path from batch files to API-based ingestion
 
-The case study will use real Citi Bike data as the primary source. Synthetic data will be limited to clearly identified test fixtures that create controlled failure cases which may not occur reliably in the real source.
+The case study uses real Citi Bike data as the primary source. Synthetic data is limited to clearly identified test fixtures that create controlled failure cases which may not occur reliably in the real source.
 
 ## Initial data source
 
@@ -36,7 +36,7 @@ Raw files are stored locally under:
 
 `data/raw/citibike/`
 
-The `data/raw/` directory is excluded from Git. The repository should preserve the code and instructions needed to obtain and process the source, not duplicate the raw dataset.
+The `data/raw/` directory is excluded from Git. The repository preserves the code and instructions needed to obtain and process the source rather than duplicating the raw dataset.
 
 Raw files are treated as immutable inputs. They are not manually edited or cleaned in place.
 
@@ -46,16 +46,16 @@ The source grain is:
 
 `one row per recorded bicycle ride`
 
-Preserving this grain is important during extraction and staging. Analytical transformations may later create other grains, such as one row per station per day, but that change must be explicit.
+Preserving this grain is important during extraction, raw landing, and staging. Analytical transformations may later create other grains, such as one row per station per day, but that change must be explicit.
 
-## Initial source inspection
+## Source inspection and profiling
 
 The January 2025 Jersey City file contains:
 
 - 50,611 data rows
 - 13 columns
 
-The columns are:
+The source columns are:
 
 1. `ride_id`
 2. `rideable_type`
@@ -71,11 +71,9 @@ The columns are:
 12. `end_lng`
 13. `member_casual`
 
-The initial Python inspection reads every CSV cell as text. Parsing into timestamps, numeric values, categories, and database nulls belongs to the transformation and validation stages.
+The initial CSV reader treats every source value as text. Parsing into timestamps, numeric values, categories, and database nulls belongs to the transformation and validation stages.
 
-## Initial missing-value profile
-
-Observed missing values:
+### Missing-value profile
 
 | Column | Missing rows | Missing percentage |
 |---|---:|---:|
@@ -84,9 +82,26 @@ Observed missing values:
 | `end_lat` | 19 | 0.04% |
 | `end_lng` | 19 | 0.04% |
 
-No missing values were observed in the remaining columns during the initial inspection.
+No missing values were observed in the remaining columns.
 
-These findings are descriptive evidence from one file. They are not yet permanent source contracts. Additional profiling and later monthly files may reveal new values, missingness patterns, or schema changes.
+### Deeper profiling findings
+
+- all 50,611 non-missing ride identifiers are unique
+- no completely identical source rows were found
+- `rideable_type` contains `electric_bike` and `classic_bike`
+- `member_casual` contains `member` and `casual`
+- all start and end timestamps parse successfully
+- no trip has a nonpositive duration
+- 21 trips exceed 24 hours and are retained as soft quality conditions
+- two trips begin shortly before midnight on 31 December 2024 and end after midnight on 1 January 2025
+- all non-missing coordinates are finite and within geographic latitude and longitude ranges
+- 25 rows contain an end-station name but no end-station identifier
+- each of those 25 station names maps uniquely to one identifier observed elsewhere in the source data
+- 107 rows have no resolved end-station identifier
+- 19 rows have neither end coordinate
+- station identifier `JC075` appears with both `Monmouth and 6th` and `Monmouth & 6th`
+
+These findings distinguish unusual but usable records from records that would be technically invalid.
 
 ## Local architecture
 
@@ -97,13 +112,18 @@ Official Citi Bike ZIP archive
 Local immutable raw file
               |
               v
-Python extraction and validation
+source.citibike_file
+source.citibike_trip_raw
               |
               v
-PostgreSQL staging layer
+Python parsing and validation
               |
               v
-Validated transformations
+staging.citibike_trip_valid
+staging.citibike_trip_rejected
+              |
+              v
+Planned analytical models
               |
               v
 PostgreSQL analytics layer
@@ -113,53 +133,156 @@ The local PostgreSQL database is:
 
 `bike_share_etl`
 
-The initial schemas are:
+The schemas are:
 
 - `source`
 - `staging`
 - `analytics`
 
-The exact role of each schema and the final table design will be refined as the pipeline is implemented. Table definitions must be derived from observed source properties and explicit processing requirements rather than from invented assumptions.
+## Raw landing layer
 
-## Planned pipeline stages
+### `source.citibike_file`
 
-1. Discover and identify an input file.
-2. Record source-file metadata.
-3. Read records without modifying the raw file.
-4. Preserve the source row grain during extraction.
-5. Parse text values into explicit Python and PostgreSQL data types.
-6. Validate required fields and allowed categorical values.
-7. Validate timestamps and calculate trip duration.
-8. Detect duplicate ride identifiers.
-9. Validate coordinate ranges.
-10. Classify valid and rejected records.
-11. Load records transactionally into PostgreSQL.
-12. Reconcile source, valid, rejected, and loaded row counts.
-13. Support safe reruns without duplicating data.
-14. Add structured logging and automated tests.
-15. Construct reusable analytical station and trip datasets.
+Grain:
 
-## Initial quality rules under consideration
+`one row per distinct raw source file`
 
-The following rules are provisional and must be confirmed through further profiling and source interpretation:
+The table records:
 
-- `ride_id` must be present.
-- `started_at` and `ended_at` must be parseable timestamps.
-- `ended_at` must occur after `started_at`.
-- trip duration should fall within a justified range.
-- `rideable_type` must belong to an accepted set.
-- `member_casual` must belong to an accepted set.
-- latitude must fall between -90 and 90.
-- longitude must fall between -180 and 180.
-- duplicate ride identifiers must be handled deterministically.
-- missing end-station information must be handled explicitly rather than silently discarded.
-- relationships between missing station identifiers, names, and coordinates should be profiled before a rejection rule is chosen.
+- generated file identifier
+- source filename
+- SHA-256 content hash
+- file size in bytes
+- source row count
+- load timestamp
 
-A source record should not be rejected merely because a value is inconvenient. Every rejection condition needs a technical or analytical justification.
+The SHA-256 hash is unique. Reprocessing the same file content therefore does not create a second manifest record or duplicate raw rows.
+
+### `source.citibike_trip_raw`
+
+Grain:
+
+`one row per CSV data row per source file`
+
+The primary key is:
+
+`(file_id, source_row_number)`
+
+All thirteen source fields are stored as text. This is deliberate: the raw layer preserves what arrived even when a future source value cannot be parsed into a target type.
+
+The January file was loaded with PostgreSQL `COPY` inside one transaction. The result was:
+
+| Measure | Count |
+|---|---:|
+| Manifest source row count | 50,611 |
+| Raw database row count | 50,611 |
+| Counts match | true |
+
+A second execution detected the existing SHA-256 hash and inserted no duplicate rows.
+
+## Validated staging layer
+
+### `staging.citibike_trip_valid`
+
+Grain:
+
+`one row per accepted raw source row`
+
+The table contains parsed and validated values, including:
+
+- typed start and end timestamps
+- calculated trip duration in seconds
+- typed geographic coordinates
+- reported and resolved end-station identifiers
+- an explicit end-station resolution method
+- soft quality flags
+- source lineage through `file_id` and `source_row_number`
+
+The accepted table preserves the distinction between provider-supplied and inferred station identifiers:
+
+- `reported_end_station_id` contains the original source value
+- `resolved_end_station_id` contains the usable identifier after deterministic resolution
+- `end_station_id_resolution_method` records whether the value came from the source, was inferred from a unique station-name match, was ambiguous, or remained unavailable
+
+### `staging.citibike_trip_rejected`
+
+Grain:
+
+`one row per rejected raw source row`
+
+Each rejected record retains source lineage and an array of one or more explicit rejection reasons. This design allows one source row to fail several independent rules while remaining traceable to the original raw record.
+
+## Validation policy
+
+### Hard rejection conditions
+
+A record is rejected when it cannot represent a technically valid typed trip. Examples include:
+
+- missing ride identifier
+- duplicate accepted ride identifier
+- missing or unknown bicycle type
+- missing or unknown membership type
+- missing or invalid timestamps
+- end time not later than start time
+- missing start-station information
+- missing, nonfinite, or geographically invalid start coordinates
+- malformed or geographically invalid end coordinates
+- only one member of an end-coordinate pair being present
+
+### Soft quality conditions
+
+The following conditions do not make the entire trip unusable:
+
+- duration longer than 24 hours
+- missing end-station identifier that can be inferred deterministically
+- unresolved end-station information
+- missing end coordinates
+- a ride beginning just outside the nominal month boundary
+- station-name variation for the same station identifier
+
+Soft conditions are preserved through explicit fields or flags rather than causing silent deletion.
+
+## Staging validation result
+
+The January file was validated twice to test deterministic rerun behavior. Both executions produced the same result:
+
+| Measure | Count |
+|---|---:|
+| Raw rows | 50,611 |
+| Valid rows | 50,611 |
+| Rejected rows | 0 |
+| Reconciliation | 50,611 + 0 = 50,611 |
+
+Observed quality flags among accepted rows:
+
+| Quality flag | Count |
+|---|---:|
+| Missing resolved end station | 107 |
+| End-station identifier inferred from station name | 25 |
+| Trip longer than 24 hours | 21 |
+| Missing end coordinates | 19 |
+
+The second validation execution replaced the selected file's staging outcomes transactionally and reproduced the same counts without appending duplicates.
+
+## Reliability properties implemented
+
+The local pipeline now demonstrates:
+
+- immutable raw source handling
+- schema-drift detection
+- file identity through SHA-256 hashing
+- transactional raw ingestion
+- bulk loading with PostgreSQL `COPY`
+- raw source lineage
+- deterministic rerun behavior
+- explicit accepted and rejected outcomes
+- hard validation versus soft quality flags
+- source-to-staging row-count reconciliation
+- preservation of reported and inferred values
 
 ## Synthetic test data policy
 
-Synthetic records may be introduced later only as clearly labelled test fixtures. Their purpose is to verify deterministic behavior for cases such as:
+Synthetic records may be introduced only as clearly labelled test fixtures. Their purpose is to verify deterministic behavior for cases such as:
 
 - duplicate ride identifiers
 - invalid timestamp strings
@@ -168,6 +291,7 @@ Synthetic records may be introduced later only as clearly labelled test fixtures
 - invalid categorical values
 - latitude or longitude outside valid ranges
 - malformed numeric values
+- incomplete coordinate pairs
 - repeated loading of the same source file
 
 Synthetic fixtures must not be mixed with the real raw dataset or presented as real Citi Bike observations.
@@ -184,25 +308,31 @@ Completed:
 - `source`, `staging`, and `analytics` schemas created
 - official January 2025 Jersey City trip data downloaded
 - raw-data directory excluded from Git
-- source structure, row count, example values, and missingness inspected
+- source structure, missingness, categories, identifiers, timestamps, durations, coordinates, and station mappings profiled
+- raw manifest and raw trip tables created
+- 50,611 source rows loaded transactionally
+- SHA-256-based idempotent raw rerun verified
+- accepted and rejected staging tables created
+- typed validation pipeline implemented
+- deterministic station-ID inference implemented without overwriting source values
+- source-to-staging reconciliation verified
+- validation rerun behavior verified
 
 ## Immediate next steps
 
-1. Profile identifier uniqueness and duplicate records.
-2. Profile distinct categorical values and their frequencies.
-3. Parse timestamps and inspect duration distributions and invalid ordering.
-4. Parse coordinates and inspect numeric validity and geographic ranges.
-5. Examine relationships among missing end-station fields.
-6. define the first accepted-record and rejected-record rules.
-7. design the staging tables from the profiling evidence.
-8. implement the first transparent extraction and transactional load.
-9. verify row-count reconciliation and rerun behavior.
+1. Add automated tests with controlled synthetic fixtures for each hard rejection rule.
+2. Add structured logging and persistent pipeline-run metadata.
+3. Centralize shared configuration and database-connection code.
+4. Design analytical trip and station models with explicit grains.
+5. Build the first analytics-layer transformation from validated staging records.
+6. Add a second monthly source file to test multi-file behavior and cross-file uniqueness.
+7. Introduce reproducible dependency metadata and code-quality tooling.
 
 ## Scope boundary
 
 This case study currently covers a local batch ETL workflow. It does not yet include:
 
-- orchestration
+- workflow orchestration
 - cloud storage or cloud databases
 - containers
 - distributed processing
