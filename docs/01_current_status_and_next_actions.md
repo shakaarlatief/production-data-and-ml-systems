@@ -8,11 +8,11 @@ This repository is a separate learning and portfolio programme for production da
 
 **Phase 3: ETL, ELT, and data pipelines**
 
-The SQL and relational-database foundation has reached the checkpoint needed to continue pipeline work. The active implementation uses direct Python, the standard library, Psycopg 3, PostgreSQL, and explicit SQL so that each responsibility remains visible before orchestration, warehouse, container, distributed-processing, or cloud abstractions are introduced.
+The SQL and relational-database foundation has reached the checkpoint needed to continue pipeline work. The active implementation uses direct Python, the standard library, Psycopg 3, PostgreSQL, and explicit SQL so that each responsibility remains visible before higher-level transformation, orchestration, container, distributed-processing, or cloud abstractions are introduced.
 
 ## Active lesson
 
-**Pipeline observability, shared infrastructure, and analytics-layer design**
+**dbt Core and analytics-layer design**
 
 The Citi Bike case study now has:
 
@@ -22,9 +22,10 @@ The Citi Bike case study now has:
 - source-to-database reconciliation;
 - controlled synthetic validation fixtures;
 - automated unit tests;
-- reproducible Python dependency and quality-tool configuration.
+- reproducible Python dependency and quality-tool configuration;
+- a persistent PostgreSQL table for pipeline-run audit records.
 
-The immediate objective is to add persistent pipeline-run metadata, structured logging, reusable configuration and connection helpers, and the first explicit analytics-layer models.
+The immediate objective is to introduce dbt Core as the first dedicated analytics-engineering tool, connect it to the existing PostgreSQL database, define the validated staging data as a dbt source, and build tested analytical models without expanding the bicycle-domain analysis unnecessarily.
 
 ## Practical environment
 
@@ -33,7 +34,7 @@ The immediate objective is to add persistent pipeline-run metadata, structured l
 - A Python 3.11 virtual environment is used for this repository.
 - Local credentials are loaded from an ignored `.env` file.
 - A dedicated `bike_share_etl` database is available.
-- The `source`, `staging`, and `analytics` schemas exist inside `bike_share_etl`.
+- The `source`, `staging`, `analytics`, and `operations` schemas exist inside `bike_share_etl`.
 - The official January 2025 Jersey City Citi Bike file is stored locally under ignored raw-data storage.
 - The repository is installable in editable mode through `pyproject.toml`.
 - Pytest and Ruff are available through the optional `dev` dependency group.
@@ -150,9 +151,33 @@ All checks passed!
 
 The tests verify that hard failures produce explicit rejection reasons and that soft conditions remain accepted while producing explicit quality flags.
 
+## Pipeline-run audit structure completed
+
+Implemented table:
+
+- `operations.pipeline_run`
+
+Grain:
+
+`one row per execution of one pipeline stage`
+
+The table supports:
+
+- pipeline and stage names;
+- a reference to the processed source file when available;
+- `running`, `succeeded`, and `failed` statuses;
+- timezone-aware start and finish timestamps;
+- source, valid, and rejected row counts;
+- error type and message fields;
+- supplementary `JSONB` details;
+- constraints that prevent contradictory run states;
+- indexes for pipeline-time and source-file lookups.
+
+The table has been created and verified in the local PostgreSQL database. Its initial row count is zero. The current Python ingestion and validation programs do not yet write audit records automatically, so the structure exists but operational integration remains future work.
+
 ## Reproducible Python project configuration
 
-`pyproject.toml` now records:
+`pyproject.toml` records:
 
 - the supported Python version;
 - runtime dependencies;
@@ -167,12 +192,14 @@ The package is installed locally with:
 python -m pip install -e ".[dev]"
 ```
 
+Generated `*.egg-info/` package metadata is excluded from version control.
+
 ## Evidence boundary
 
 Evidence supports claims that the case study includes:
 
 - real-file profiling;
-- reproducible raw and staging table definitions;
+- reproducible raw, staging, and operations table definitions;
 - transactional raw ingestion;
 - SHA-256-based idempotency;
 - typed validation;
@@ -183,14 +210,15 @@ Evidence supports claims that the case study includes:
 - rerun-safe staging replacement;
 - controlled synthetic test fixtures;
 - automated unit tests;
-- repeatable lint and test commands.
+- repeatable lint and test commands;
+- a verified pipeline-run audit table structure.
 
 Evidence does not yet support claims that the repository includes:
 
-- persistent pipeline-run metadata;
+- automatic pipeline-run audit writes;
 - structured production logging;
 - centralized shared configuration and database utilities;
-- a completed analytical model;
+- dbt-managed analytical models;
 - orchestration;
 - containerization;
 - cloud deployment;
@@ -199,20 +227,20 @@ Evidence does not yet support claims that the repository includes:
 
 ## Immediate next actions
 
-1. Add a persistent pipeline-run table with run status, timestamps, counts, and failure information.
-2. Add structured logging to raw ingestion and staging validation.
-3. Centralize shared environment, path, and database-connection logic.
-4. Add integration-oriented tests for database reconciliation and rerun behavior.
-5. Design analytical trip and station models with explicit grains.
-6. Build the first analytics-layer transformation from validated records.
-7. Add a second monthly file to test multi-file behavior and cross-file uniqueness.
-8. Add continuous integration after local commands and project structure are stable.
+1. Install the PostgreSQL adapter for dbt Core in the existing Python 3.11 environment.
+2. Create a dbt project inside the repository with generated output excluded from Git.
+3. Configure a local PostgreSQL target using environment variables rather than committed credentials.
+4. Define `staging.citibike_trip_valid` and related tables as dbt sources.
+5. Build the first analytics-layer models with explicit grains.
+6. Add dbt data tests, source tests, descriptions, and generated documentation.
+7. Compare dbt-managed SQL transformations with the earlier manual Python and SQL implementation.
+8. Return later to automatic run auditing, structured logging, orchestration, and continuous integration.
 
 ## Current implementation boundary
 
-The completed implementation covers environment setup, secure local configuration, database connectivity, real-source acquisition, detailed profiling, raw landing, typed validation, accepted and rejected outcomes, transactional bulk loading, deterministic reruns, row-count reconciliation, synthetic test fixtures, automated tests, and lint configuration.
+The completed implementation covers environment setup, secure local configuration, database connectivity, real-source acquisition, detailed profiling, raw landing, typed validation, accepted and rejected outcomes, transactional bulk loading, deterministic reruns, row-count reconciliation, synthetic test fixtures, automated tests, lint configuration, and a persistent pipeline-run audit table definition verified in PostgreSQL.
 
-No final analytical model, scheduled workflow, cloud resource, containerized service, distributed pipeline, or machine-learning system has been completed yet.
+No dbt-managed analytical model, scheduled workflow, cloud resource, containerized service, distributed pipeline, or machine-learning system has been completed yet.
 
 ## Deferred until prerequisites are ready
 
@@ -221,7 +249,6 @@ No final analytical model, scheduled workflow, cloud resource, containerized ser
 - triggers and stored procedures;
 - deep transaction-isolation and locking analysis;
 - partitioning and advanced index types;
-- dbt;
 - Airflow or another orchestrator;
 - Docker;
 - MLflow;
