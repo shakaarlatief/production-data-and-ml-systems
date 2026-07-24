@@ -8,52 +8,35 @@ This repository is a separate learning and portfolio programme for production da
 
 **Phase 3: ETL, ELT, and data pipelines**
 
-The SQL and relational-database foundation has reached the checkpoint needed to continue pipeline work. This does not mean that every advanced PostgreSQL topic has been completed or independently mastered. It means that the required concepts for understanding extraction, transformation, loading, transactions, validation, and database-backed pipelines have been introduced and practised sufficiently to continue.
+The SQL and relational-database foundation has reached the checkpoint needed to continue pipeline work. The active implementation uses direct Python, the standard library, Psycopg 3, PostgreSQL, and explicit SQL so that each responsibility remains visible before orchestration, warehouse, container, distributed-processing, or cloud abstractions are introduced.
 
 ## Active lesson
 
-**Automated validation, pipeline observability, and analytics-layer design**
+**Pipeline observability, shared infrastructure, and analytics-layer design**
 
-The first practical ETL case study now has a functioning raw landing layer and a validated staging layer built from official January 2025 Jersey City Citi Bike trip-history data.
+The Citi Bike case study now has:
 
-The immediate objective is to strengthen the pipeline through controlled tests, structured logging, reusable configuration, and an explicit analytics-layer model. The implementation remains intentionally transparent: direct Python, the standard library, Psycopg 3, PostgreSQL, and explicit SQL are used before higher-level orchestration, warehouse, container, or cloud abstractions are introduced.
+- a reproducible raw landing layer;
+- a typed accepted-record and rejected-record staging layer;
+- deterministic rerun behavior;
+- source-to-database reconciliation;
+- controlled synthetic validation fixtures;
+- automated unit tests;
+- reproducible Python dependency and quality-tool configuration.
 
-## SQL checkpoint reached
+The immediate objective is to add persistent pipeline-run metadata, structured logging, reusable configuration and connection helpers, and the first explicit analytics-layer models.
 
-The following areas have been explained and, in many cases, practised interactively in PostgreSQL and pgAdmin:
-
-- PostgreSQL server, client, connection, database, schema, table, row, column, and data type
-- row grain, entities, attributes, primary keys, foreign keys, and referential integrity
-- one-to-one, one-to-many, and many-to-many relationships
-- relational versus non-relational database models at an introductory level
-- `SELECT`, aliases, expressions, filtering, sorting, limiting, and `DISTINCT`
-- missing-value handling and SQL three-valued logic
-- aggregate functions, `GROUP BY`, `HAVING`, and conditional aggregation
-- `INNER JOIN`, `LEFT JOIN`, `CROSS JOIN`, join conditions, row multiplication, and anti-joins
-- subqueries, correlated subqueries, `IN`, `EXISTS`, `NOT EXISTS`, and common table expressions
-- window functions, partitioning, ranking, running totals, `LAG`, and `LEAD`
-- `UNION`, `UNION ALL`, `INTERSECT`, and `EXCEPT`
-- text functions, casting, arithmetic, date arithmetic, `EXTRACT`, `DATE_TRUNC`, and intervals
-- `INSERT`, `UPDATE`, `DELETE`, `RETURNING`, `INSERT ... SELECT`, and upserts
-- transactions, rollback, savepoints, and the ACID properties
-- views, materialized views, temporary tables, and permanent tables
-- indexes, composite index order, `EXPLAIN`, `EXPLAIN ANALYZE`, and planner statistics
-- normalization, denormalization, insertion, update, and deletion anomalies
-- operational versus analytical table design and a simple SQL-to-ETL bridge
-
-## Practical environment completed
+## Practical environment
 
 - PostgreSQL 18 is installed locally and running.
 - pgAdmin 4 is connected to the local PostgreSQL server.
-- The earlier `telecom_operations` learning database remains available for SQL practice.
-- A Python 3.11 virtual environment has been created for this repository.
-- Psycopg 3 and python-dotenv have been installed in the virtual environment.
-- Local database credentials are loaded from an ignored `.env` file.
-- Python-to-PostgreSQL connectivity has been verified successfully.
-- A dedicated `bike_share_etl` database has been created.
-- The `source`, `staging`, and `analytics` schemas have been created inside `bike_share_etl`.
-- The official January 2025 Jersey City Citi Bike trip-history archive has been downloaded locally.
-- Raw data under `data/raw/` is excluded from Git.
+- A Python 3.11 virtual environment is used for this repository.
+- Local credentials are loaded from an ignored `.env` file.
+- A dedicated `bike_share_etl` database is available.
+- The `source`, `staging`, and `analytics` schemas exist inside `bike_share_etl`.
+- The official January 2025 Jersey City Citi Bike file is stored locally under ignored raw-data storage.
+- The repository is installable in editable mode through `pyproject.toml`.
+- Pytest and Ruff are available through the optional `dev` dependency group.
 
 ## Source evidence
 
@@ -67,26 +50,27 @@ Observed grain:
 
 Observed structure:
 
-- 50,611 data rows
-- 13 columns
-- ride identifiers, bicycle type, start and end timestamps, start and end station information, coordinates, and membership category
+- 50,611 data rows;
+- 13 source columns;
+- unique ride identifiers in the observed file;
+- no exact duplicate source rows;
+- two observed bicycle categories;
+- two observed membership categories;
+- parseable start and end timestamps;
+- valid non-missing geographic coordinates.
 
-Key profiling results:
+Important quality findings:
 
-- all 50,611 ride identifiers are unique
-- no exact duplicate rows were found
-- all timestamps parse successfully
-- no nonpositive trip durations were found
-- 21 trips exceed 24 hours
-- 25 missing end-station identifiers can be inferred uniquely from station names
-- 107 rows remain without a resolved end station
-- 19 rows have no end coordinates
-- all non-missing coordinates are finite and geographically valid
-- station identifier `JC075` appears with two name variants
+| Finding | Count |
+|---|---:|
+| Trips longer than 24 hours | 21 |
+| Missing end-station identifiers inferred uniquely from names | 25 |
+| Rows without a resolved end station | 107 |
+| Rows without end coordinates | 19 |
+
+Station identifier `JC075` appears with two source-name variants. Station identifiers are therefore treated as the stable station reference, while source names are preserved as descriptive values.
 
 ## Raw landing layer completed
-
-The repository now contains reproducible raw-layer DDL and a transactional ingestion program.
 
 Implemented tables:
 
@@ -95,14 +79,14 @@ Implemented tables:
 
 Implemented behavior:
 
-- SHA-256 file identity
-- source-file manifest metadata
-- immutable raw source values stored as text
-- source-row lineage through `(file_id, source_row_number)`
-- bulk loading through PostgreSQL `COPY`
-- transactional rollback behavior
-- source-to-database row-count reconciliation
-- idempotent rerun handling
+- SHA-256 file identity;
+- source-file manifest metadata;
+- immutable raw values stored as text;
+- row lineage through `(file_id, source_row_number)`;
+- PostgreSQL `COPY` loading;
+- transactional ingestion;
+- raw-row reconciliation;
+- idempotent repeated execution of the same file.
 
 Observed result:
 
@@ -110,7 +94,7 @@ Observed result:
 |---|---:|
 | Manifest source rows | 50,611 |
 | Raw database rows | 50,611 |
-| Second-run duplicate rows inserted | 0 |
+| Duplicate rows inserted on second execution | 0 |
 
 ## Validated staging layer completed
 
@@ -119,7 +103,18 @@ Implemented tables:
 - `staging.citibike_trip_valid`
 - `staging.citibike_trip_rejected`
 
-The validation program parses timestamps and coordinates, checks required values and accepted categories, calculates trip duration, separates hard rejection rules from soft quality conditions, preserves source lineage, and distinguishes provider-supplied station identifiers from deterministically inferred identifiers.
+The validation process:
+
+- converts blank text to explicit missing values;
+- parses timestamps and coordinates;
+- calculates trip duration;
+- validates required values and accepted categories;
+- rejects technically invalid records with explicit reason codes;
+- retains usable unusual records through soft quality flags;
+- preserves provider-reported station identifiers;
+- derives a separate resolved station identifier when inference is deterministic;
+- replaces one file's staging outcomes transactionally on rerun;
+- verifies `raw rows = valid rows + rejected rows`.
 
 Observed result from two identical validation executions:
 
@@ -130,93 +125,112 @@ Observed result from two identical validation executions:
 | Rejected rows | 0 |
 | Reconciliation | 50,611 + 0 = 50,611 |
 
-Observed quality flags among accepted rows:
+## Automated validation evidence completed
 
-| Quality flag | Count |
-|---|---:|
-| Missing resolved end station | 107 |
-| End-station identifier inferred from station name | 25 |
-| Trip longer than 24 hours | 21 |
-| Missing end coordinates | 19 |
+A controlled synthetic fixture is stored separately under `tests/fixtures/`. It does not modify or imitate the real raw dataset.
 
-The second execution reproduced the same result without appending duplicate staging rows.
+The fixture exercises:
+
+- a normal valid trip;
+- a long trip with missing endpoint information;
+- deterministic and ambiguous station-name resolution;
+- missing ride identifier;
+- invalid timestamp text;
+- nonpositive duration;
+- unknown categorical values;
+- invalid and incomplete coordinates;
+- duplicate ride identifiers.
+
+Automated verification result:
+
+```text
+12 passed
+All checks passed!
+```
+
+The tests verify that hard failures produce explicit rejection reasons and that soft conditions remain accepted while producing explicit quality flags.
+
+## Reproducible Python project configuration
+
+`pyproject.toml` now records:
+
+- the supported Python version;
+- runtime dependencies;
+- optional development dependencies;
+- package discovery under `src/`;
+- pytest configuration;
+- Ruff configuration.
+
+The package is installed locally with:
+
+```bash
+python -m pip install -e ".[dev]"
+```
 
 ## Evidence boundary
 
-The repository now contains a functioning local batch ETL foundation rather than planning documents alone.
-
 Evidence supports claims that the case study includes:
 
-- real-file source profiling
-- reproducible PostgreSQL raw-table creation
-- transactional raw ingestion
-- SHA-256-based idempotent reruns
-- explicit valid and rejected staging outcomes
-- hard validation rules and soft quality flags
-- deterministic source-value enrichment with lineage preservation
-- raw-to-staging reconciliation
-- rerun-safe staging replacement for one file
+- real-file profiling;
+- reproducible raw and staging table definitions;
+- transactional raw ingestion;
+- SHA-256-based idempotency;
+- typed validation;
+- explicit accepted and rejected outcomes;
+- hard rules and soft quality flags;
+- deterministic enrichment with source-value preservation;
+- raw-to-staging reconciliation;
+- rerun-safe staging replacement;
+- controlled synthetic test fixtures;
+- automated unit tests;
+- repeatable lint and test commands.
 
 Evidence does not yet support claims that the repository includes:
 
-- comprehensive automated tests
-- structured production logging
-- persistent pipeline-run metadata
-- a completed analytical model
-- orchestration
-- containerization
-- cloud deployment
-- distributed processing
-- production monitoring
-
-## Repository inclusion rule
-
-Exploratory code, exercises, and temporary experiments are not added to the repository automatically.
-
-A repository artifact is added only after a deliberate decision that it is useful as one of the following:
-
-- a reusable implementation
-- a meaningful project milestone
-- a polished technical example
-- documentation worth preserving
-- part of the eventual integrated system
-
-This rule applies to SQL, ETL, and all later phases.
+- persistent pipeline-run metadata;
+- structured production logging;
+- centralized shared configuration and database utilities;
+- a completed analytical model;
+- orchestration;
+- containerization;
+- cloud deployment;
+- distributed processing;
+- production monitoring.
 
 ## Immediate next actions
 
-1. Add controlled synthetic fixtures for each hard rejection rule.
-2. Add automated tests for parsing, validation, reconciliation, and rerun behavior.
-3. Add structured logging and a persistent pipeline-run table.
-4. Centralize shared path, environment, and database-connection logic.
+1. Add a persistent pipeline-run table with run status, timestamps, counts, and failure information.
+2. Add structured logging to raw ingestion and staging validation.
+3. Centralize shared environment, path, and database-connection logic.
+4. Add integration-oriented tests for database reconciliation and rerun behavior.
 5. Design analytical trip and station models with explicit grains.
 6. Build the first analytics-layer transformation from validated records.
-7. Add a second monthly file to test cross-file uniqueness and multi-file processing.
-8. Introduce reproducible dependency metadata, formatting, linting, and test commands.
+7. Add a second monthly file to test multi-file behavior and cross-file uniqueness.
+8. Add continuous integration after local commands and project structure are stable.
 
 ## Current implementation boundary
 
-The completed implementation covers environment setup, secure local configuration, database connectivity, real-source acquisition, detailed source profiling, raw landing, typed validation, accepted and rejected outcomes, transactional bulk loading, deterministic reruns, and row-count reconciliation.
+The completed implementation covers environment setup, secure local configuration, database connectivity, real-source acquisition, detailed profiling, raw landing, typed validation, accepted and rejected outcomes, transactional bulk loading, deterministic reruns, row-count reconciliation, synthetic test fixtures, automated tests, and lint configuration.
 
-No production-ready package, final analytical model, scheduled workflow, cloud resource, containerized service, distributed pipeline, or machine-learning system has been completed yet.
+No final analytical model, scheduled workflow, cloud resource, containerized service, distributed pipeline, or machine-learning system has been completed yet.
 
 ## Deferred until prerequisites are ready
 
-- advanced PostgreSQL administration
-- recursive CTEs
-- triggers and stored procedures
-- deep transaction-isolation and locking analysis
-- partitioning and advanced index types
-- dbt
-- Airflow or another orchestrator
-- Docker
-- MLflow
-- Azure
-- NoSQL implementations
-- Spark
-- Kafka
-- Kubernetes
-- Terraform
+- advanced PostgreSQL administration;
+- recursive CTEs;
+- triggers and stored procedures;
+- deep transaction-isolation and locking analysis;
+- partitioning and advanced index types;
+- dbt;
+- Airflow or another orchestrator;
+- Docker;
+- MLflow;
+- Azure;
+- NoSQL implementations;
+- Spark;
+- Kafka;
+- Kubernetes;
+- Terraform.
 
 ## Update rule
 
