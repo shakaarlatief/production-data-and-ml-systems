@@ -100,18 +100,22 @@ This register records why a technology or approach is selected, what alternative
 
 **Reasoning:** Recognition is not mastery. The repository should preserve evidence of independent use and project application.
 
-## TDR-009: Defer the primary database client decision
+## TDR-009: Use VS Code as the primary development workspace
 
-**Status:** Deferred
+**Status:** Accepted
 
-**Candidates:**
+**Decision:** Use VS Code as the primary workspace for Python, SQL, Markdown, configuration, tests, terminal commands, and Git operations. Keep pgAdmin 4 as a secondary graphical PostgreSQL administration and inspection tool. Learn `psql` as the command-line PostgreSQL client.
 
-- DBeaver
-- pgAdmin
-- a VS Code database extension
-- command-line `psql`
+**Reasoning:**
 
-**Reason for deferral:** The installation lesson should compare the role of the PostgreSQL server, command-line client, graphical client, and editor integration before selecting the primary workflow.
+- ETL and later phases combine Python, SQL, tests, documentation, configuration, containers, and version control in one project.
+- VS Code provides one workspace for these file types and development activities.
+- pgAdmin remains useful for visual inspection of database objects, roles, sessions, backups, and administration tasks.
+- `psql` is important for automation, remote servers, containers, CI environments, and situations where a graphical client is unavailable.
+
+**Alternative considered:** DBeaver remains a useful optional cross-database client but is not required for the primary workflow.
+
+**Boundary:** The PostgreSQL server remains separate from its clients. VS Code, pgAdmin, and `psql` all connect to the same database service and do not contain the database themselves.
 
 ## TDR-010: Defer cloud service selection details
 
@@ -128,3 +132,13 @@ This register records why a technology or approach is selected, what alternative
 **Decision:** Kubernetes is not an early prerequisite.
 
 **Reasoning:** Kubernetes manages containerized workloads. Docker, APIs, deployment, health checks, and basic cloud operations must be understood first.
+
+## TDR-012: Maintain a separate industry tooling landscape
+
+**Status:** Accepted
+
+**Decision:** Maintain `07_industry_tooling_landscape.md` as an industry-facing map of tools, categories, priorities, alternatives, and planned learning phases. Keep the master learning map focused on stable concepts and dependency order.
+
+**Reasoning:** Vacancy descriptions often combine product names from several layers of a system. A separate tooling landscape makes those names interpretable without turning the master roadmap into an unfocused checklist.
+
+**Maintenance rule:** Update the tooling landscape when repeated market signals, a changed role direction, or a concrete project requirement justifies a revision. A fixed weekly update is not required.
