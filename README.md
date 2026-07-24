@@ -48,6 +48,7 @@ The main planning and coordination documents are located in `docs/`:
 - `04_technology_decision_register.md`: technology choices and alternatives
 - `05_glossary.md`: definitions and distinctions between related terms
 - `06_documentation_workflow.md`: documentation roles and update rules
+- `07_industry_tooling_landscape.md`: industry-facing map of tools, priorities, alternatives, and planned learning phases
 - `roadmaps/`: detailed roadmap for each major subject area, including relational and specialized data stores
 
 ## Current phase
