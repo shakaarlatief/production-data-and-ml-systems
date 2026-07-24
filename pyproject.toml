@@ -28,3 +28,13 @@ addopts = "-ra"
 [tool.ruff]
 line-length = 88
 target-version = "py311"
+
+[tool.ruff.lint.per-file-ignores]
+# The source files contain local timestamps without UTC offsets. The anomaly
+# inspection therefore compares deliberately timezone-naive values.
+"src/bike_share_etl/inspect_trip_anomalies.py" = ["DTZ001"]
+
+# Nested contexts make the connection and cursor lifetimes explicit in these
+# small database entry points. This is a deliberate readability choice.
+"src/bike_share_etl/check_database_connection.py" = ["SIM117"]
+"src/bike_share_etl/load_citibike_raw.py" = ["SIM117"]
