@@ -49,6 +49,7 @@ The main planning and coordination documents are located in `docs/`:
 - `05_glossary.md`: definitions and distinctions between related terms
 - `06_documentation_workflow.md`: documentation roles and update rules
 - `07_industry_tooling_landscape.md`: industry-facing map of tools, priorities, alternatives, and planned learning phases
+- `08_citibike_etl_case_study.md`: first practical ETL implementation using official Citi Bike trip-history data
 - `roadmaps/`: detailed roadmap for each major subject area, including relational and specialized data stores
 
 ## Current phase
@@ -57,7 +58,7 @@ The active phase is ETL, ELT, and data pipelines.
 
 The SQL and relational-database foundation has reached the checkpoint required to continue. PostgreSQL 18 and pgAdmin have been used locally with a small `telecom_operations` database, operational and analytical schemas, related customer and invoice tables, constraints, transactions, reusable query objects, indexes, and analytical transformations.
 
-This checkpoint represents conceptual understanding and guided practice rather than complete independent mastery or a finished portfolio database. The next objective is to understand pipeline architecture and build a transparent local Python-to-PostgreSQL workflow before introducing orchestration, warehouse tooling, containers, or cloud services.
+The first practical ETL case study is now underway using official January 2025 Jersey City Citi Bike trip-history data. A Python 3.11 virtual environment has been created, Psycopg 3 and python-dotenv have been installed, Python-to-PostgreSQL connectivity has been verified, a dedicated `bike_share_etl` database and three initial schemas have been created, and the first real source file has been downloaded and profiled. The immediate objective is to turn that source evidence into explicit validation rules, a staging design, and a repeatable transactional load.
 
 ## Intended result
 
