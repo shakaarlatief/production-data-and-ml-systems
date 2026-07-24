@@ -30,13 +30,15 @@ A status upgrade should be supported by evidence such as:
 - a documented design decision
 - a review exercise completed after time has passed
 
+Exploratory work does not need to become a repository artifact. Repository inclusion is a separate decision from learning evidence.
+
 ## Programme status
 
 | Phase | Status | Current evidence |
 |---|---|---|
-| SQL and relational databases | Introduced | Relational foundations and basic query syntax discussed; detailed roadmap created |
-| Data modelling | Not started | Roadmap only |
-| ETL, ELT, and pipelines | Not started | Roadmap only |
+| SQL and relational databases | Guided practice | Main relational concepts and practical SQL foundation completed interactively in PostgreSQL and pgAdmin; independent review and portfolio implementation remain |
+| Data modelling | Not started | Foundational normalization and operational-versus-analytical distinctions were introduced during SQL, but the dedicated modelling phase has not started |
+| ETL, ELT, and pipelines | Introduced | Transition established, initial tooling approach discussed, and implementation not yet started |
 | Warehouses, lakes, Snowflake, and dbt | Not started | Roadmap only |
 | Workflow orchestration | Not started | Roadmap only |
 | APIs, Docker, and CI/CD | Not started | Roadmap only |
@@ -52,70 +54,98 @@ A status upgrade should be supported by evidence such as:
 
 | Competency | Status | Notes |
 |---|---|---|
-| Explain why relational databases exist | Explained | Discussed using customers, invoices, consistency, shared access, and integrity |
-| Distinguish a database from a DBMS | Explained | PostgreSQL identified as the DBMS rather than the database itself |
-| Distinguish server, client, and connection | Explained | Local PostgreSQL and pgAdmin architecture introduced |
-| Define schema, table, row, and column | Explained | Formal practical use still required |
-| Define primary key | Explained | Formal exercises still required |
-| Define foreign key | Explained | Formal exercises still required |
-| Explain referential integrity | Explained | Formal exercises still required |
-| Identify one-to-many relationships | Explained | Customer-to-invoice example |
-| Identify many-to-many relationships | Explained | Customer-to-service junction-table example |
-| Identify row grain | Explained | Customer, invoice, payment, and customer-month examples |
-| Explain `SELECT` | Explained | Conceptual explanation completed; PostgreSQL execution pending |
-| Explain `FROM` | Explained | Conceptual explanation completed; PostgreSQL execution pending |
-| Explain `*` in `SELECT *` | Explained | Distinguished from multiplication and from `COUNT(*)` |
-| Explain `;` | Explained | Introduced as a statement terminator |
-| Explain aliases with `AS` | Explained | Conceptual explanation completed |
-| Filter rows with `WHERE` | Not started | Planned after local PostgreSQL setup |
-| Work correctly with `NULL` | Not started | |
-| Sort and limit results | Not started | |
-| Use aggregate functions | Introduced | `COUNT`, `AVG`, `SUM`, and `MAX` explained conceptually; practical queries pending |
-| Use `GROUP BY` | Introduced | Grouping and grain change explained; practical queries pending |
-| Use joins safely | Not started | |
-| Diagnose join multiplication | Not started | |
-| Use subqueries and CTEs | Not started | |
-| Use window functions | Previewed | `COUNT(*) OVER (PARTITION BY ...)` discussed early |
-| Create tables with appropriate data types | Not started | |
-| Apply constraints | Not started | |
-| Use transactions | Not started | |
-| Explain indexes and query plans | Not started | |
-| Normalize an operational schema | Not started | |
-| Build a customer-level modelling table | Not started | |
+| Explain why relational databases exist | Explained | Discussed persistence, shared access, consistency, integrity, and trade-offs with denormalized alternatives |
+| Distinguish a database from a DBMS | Explained | PostgreSQL identified as the DBMS; `telecom_operations` is a database managed by it |
+| Distinguish server, client, and connection | Guided practice | Local PostgreSQL service and pgAdmin connection used successfully |
+| Define schema, table, row, and column | Guided practice | `operational` and `analytics` schemas and small tables created locally |
+| Define primary key | Guided practice | Primary keys created and constraint behavior inspected |
+| Define foreign key | Guided practice | Invoice-to-customer foreign key created, dropped, corrected, and recreated |
+| Explain referential integrity | Guided practice | Invalid references and foreign-key behavior discussed and tested conceptually |
+| Identify one-to-many relationships | Guided practice | Customer-to-invoice relationship used throughout queries and schema work |
+| Identify many-to-many relationships | Explained | Junction-table structure explained; full practical implementation deferred |
+| Identify row grain | Guided practice | Customer, invoice, joined, grouped, and analytical grains stated repeatedly |
+| Explain `SELECT` and `FROM` | Guided practice | Used throughout interactive PostgreSQL queries |
+| Filter rows with `WHERE` | Guided practice | Comparison operators, logical operators, ranges, lists, patterns, dates, and missing values used |
+| Work correctly with `NULL` | Guided practice | `IS NULL`, `IS NOT NULL`, `COALESCE`, three-valued logic, and `NOT IN` risks explained |
+| Sort and limit results | Guided practice | `ORDER BY`, multiple sort keys, null placement, and `LIMIT` used |
+| Use aggregate functions | Guided practice | `COUNT`, `SUM`, `AVG`, `MIN`, `MAX`, conditional aggregation, and aggregate `FILTER` explained |
+| Use `GROUP BY` and `HAVING` | Guided practice | Group grain and filtering before versus after aggregation explained and used |
+| Use conditional expressions | Guided practice | `CASE` and conditional aggregation used |
+| Use joins safely | Guided practice | `INNER JOIN`, `LEFT JOIN`, `CROSS JOIN`, and `ON` versus `WHERE` explained and used |
+| Diagnose join multiplication | Guided practice | Missing relationship conditions, Cartesian multiplication, and output grain diagnosed interactively |
+| Use anti-joins | Guided practice | `LEFT JOIN ... IS NULL` and `NOT EXISTS` explained |
+| Use subqueries | Guided practice | Scalar, set-returning, and correlated subqueries explained and used |
+| Use `EXISTS` and `NOT EXISTS` | Guided practice | Correlation and the purpose of `SELECT 1` revisited until clear |
+| Use common table expressions | Guided practice | Single and multiple CTEs explained; advanced recursion deferred |
+| Use set operations | Guided practice | `UNION`, `UNION ALL`, `INTERSECT`, and `EXCEPT` explained and compared with `OR` logic |
+| Use window functions | Guided practice | Partitioned aggregates, ranking, running totals, `LAG`, and `LEAD` explained |
+| Use text, numeric, and date expressions | Guided practice | Text functions, casting, arithmetic, safe division, intervals, `EXTRACT`, and `DATE_TRUNC` covered |
+| Create databases and schemas | Guided practice | `telecom_operations`, `operational`, and `analytics` created locally |
+| Create tables with appropriate data types | Guided practice | Customer and invoice tables created; numeric precision error diagnosed and corrected |
+| Apply constraints | Guided practice | Primary key, foreign key, `NOT NULL`, `CHECK`, numeric precision, and defaults discussed |
+| Modify existing schema objects | Guided practice | `ALTER TABLE`, adding columns, renaming columns, changing types, and changing constraints used |
+| Insert, update, and delete rows safely | Guided practice | Explicit columns, `RETURNING`, preview-before-write, and missing-`WHERE` risks explained |
+| Use upserts | Explained | `ON CONFLICT`, `DO NOTHING`, `DO UPDATE`, and `EXCLUDED` explained; independent practice pending |
+| Use transactions | Guided practice | `BEGIN`, `COMMIT`, `ROLLBACK`, failed transaction state, and savepoints explained |
+| Explain ACID properties | Explained | Atomicity, consistency, isolation, and durability connected to pipeline loads |
+| Use views and temporary structures | Guided practice | Views, materialized views, CTEs, temporary tables, and permanent tables compared |
+| Explain indexes and query plans | Guided practice | B-tree and composite indexes, selectivity, `EXPLAIN`, `EXPLAIN ANALYZE`, and scan types introduced |
+| Explain normalization and denormalization | Explained | Normal forms, anomalies, historical snapshots, duplicated mutable facts, and practical trade-offs discussed |
+| Normalize a small operational schema | Guided practice | Customers and invoices separated at clear grains with a foreign-key relationship |
+| Distinguish operational and analytical tables | Explained | Source-of-truth operational data and derived analytical summaries compared |
+| Build a customer-level analytical table | Explained | Full-refresh SQL pattern and validation checks explained; no repository implementation preserved yet |
+| Construct a leakage-safe point-in-time modelling table | Not started | Requires the dedicated data-modelling phase and a defined prediction problem |
+| Complete an independent mixed SQL assessment | Not started | Required before upgrading the SQL phase to independent practice |
+| Produce a portfolio-ready SQL implementation | Not started | Repository inclusion will be decided deliberately when a coherent component exists |
 
 ## Relational and non-relational storage status
 
 | Competency | Status | Notes |
 |---|---|---|
-| Distinguish relational from non-relational databases | Introduced | High-level comparison completed |
-| Explain that NoSQL is an umbrella term | Introduced | Document, key-value, wide-column, and graph families identified |
+| Distinguish relational from non-relational databases | Explained | Relational, document, key-value, wide-column, and graph models compared at a high level |
+| Explain that NoSQL is an umbrella term | Explained | NoSQL treated as multiple model families rather than one database type |
 | Explain document databases | Introduced | Nested customer-and-services example discussed |
 | Explain key-value databases | Introduced | Cache and session examples discussed |
 | Explain wide-column databases | Introduced | Large distributed write workloads mentioned |
-| Explain graph databases | Introduced | Nodes, relationships, and path-oriented use cases discussed |
-| Compare normalization with embedding | Previewed | Formal modelling lesson deferred |
+| Explain graph databases | Introduced | Nodes, relationships, and traversal-oriented workloads introduced |
+| Compare normalization, denormalization, and embedding | Explained | Trade-offs, application-side synchronization, historical snapshots, and derived stores discussed |
 | Explain polyglot persistence | Introduced | Multiple database types used for different workloads |
 | Explain consistency and replication trade-offs | Not started | Dedicated roadmap topic |
 | Select a storage model from workload requirements | Not started | Requires comparative exercises and implementation evidence |
-| Implement a document database | Not started | Deferred until prerequisites are ready |
-| Implement a key-value database | Not started | Deferred until prerequisites are ready |
-| Implement a graph database | Not started | Deferred until prerequisites are ready |
+| Implement a document database | Not started | Deferred until specialized-data-store phase |
+| Implement a key-value database | Not started | Deferred until specialized-data-store phase |
+| Implement a graph database | Not started | Deferred until specialized-data-store phase |
 
 ## Practical tooling status
 
 | Tool or skill | Status | Notes |
 |---|---|---|
-| PostgreSQL | Not started | Selected as primary local database; installation is next |
-| pgAdmin 4 | Not started | Selected for the first local connection |
-| `psql` | Not started | Command-line client to be installed with PostgreSQL |
-| SQL files in version control | Not started | |
-| Python database connection | Not started | |
-| Automated SQL tests | Not started | |
+| PostgreSQL | Guided practice | PostgreSQL 18 installed and used through a local learning database |
+| pgAdmin 4 | Guided practice | Query Tool, Object Explorer, constraints, columns, and query results used |
+| `psql` | Not started | Command-line client remains deferred |
+| SQL files in version control | Not started | Interactive SQL exercises were intentionally not converted automatically into repository deliverables |
+| Python environment for ETL | Not started | Version verification and virtual environment creation are the next practical setup steps |
+| Python database connection | Not started | Psycopg approach selected conceptually; implementation pending |
+| Automated pipeline tests | Not started | Planned after the first transparent pipeline works |
+| Logging and configuration | Not started | Planned during ETL implementation |
 | MongoDB or equivalent document store | Not started | Deferred to specialized data stores roadmap |
 | Redis or equivalent key-value store | Not started | Deferred to specialized data stores roadmap |
 | Neo4j or equivalent graph store | Not started | Deferred to specialized data stores roadmap |
 | Dockerized PostgreSQL | Not started | Deferred until Docker foundations |
 | Cloud database | Not started | Deferred until Azure phase |
+
+## Current evidence boundary
+
+The SQL checkpoint supports moving into ETL, but the following evidence is still absent:
+
+- a delayed review of the SQL material
+- a mixed independent SQL assessment
+- a complete point-in-time analytical dataset
+- a version-controlled SQL implementation selected for portfolio use
+- automated database tests
+- an integrated production project application
+
+These gaps should not block the ETL learning phase. They should prevent premature claims of independent mastery or portfolio readiness.
 
 ## Review cadence
 
@@ -123,6 +153,6 @@ At the end of each major part:
 
 1. complete a mixed independent exercise set
 2. explain the main concepts without looking at notes
-3. apply the concepts to the integrated project
+3. apply selected concepts to a coherent implementation
 4. record mistakes and corrections
 5. schedule a later review before changing status to `Reviewed`
