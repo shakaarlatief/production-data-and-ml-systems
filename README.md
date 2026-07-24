@@ -58,7 +58,7 @@ The active phase is ETL, ELT, and data pipelines.
 
 The SQL and relational-database foundation has reached the checkpoint required to continue. PostgreSQL 18 and pgAdmin have been used locally with a small `telecom_operations` database, operational and analytical schemas, related customer and invoice tables, constraints, transactions, reusable query objects, indexes, and analytical transformations.
 
-The first practical ETL case study is now underway using official January 2025 Jersey City Citi Bike trip-history data. A Python 3.11 virtual environment has been created, Psycopg 3 and python-dotenv have been installed, Python-to-PostgreSQL connectivity has been verified, a dedicated `bike_share_etl` database and three initial schemas have been created, and the first real source file has been downloaded and profiled. The immediate objective is to turn that source evidence into explicit validation rules, a staging design, and a repeatable transactional load.
+The first practical ETL case study uses official January 2025 Jersey City Citi Bike trip-history data. The local implementation now includes detailed source profiling, SHA-256-based file registration, transactional raw ingestion through PostgreSQL `COPY`, immutable source-row lineage, typed staging validation, accepted and rejected outcomes, deterministic station-ID inference, soft quality flags, raw-to-staging reconciliation, and rerun-safe processing. The immediate objective is to add automated tests and logging, centralize shared configuration, and design the first analytics-layer models.
 
 ## Intended result
 
