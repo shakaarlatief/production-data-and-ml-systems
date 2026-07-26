@@ -11,6 +11,9 @@ services:
       - "${DOCKER_DB_PORT:-5433}:5432"
     volumes:
       - citibike_postgres_data:/var/lib/postgresql
+      - ./sql/001_create_citibike_raw_tables.sql:/docker-entrypoint-initdb.d/001_create_citibike_raw_tables.sql:ro
+      - ./sql/002_create_citibike_staging_tables.sql:/docker-entrypoint-initdb.d/002_create_citibike_staging_tables.sql:ro
+      - ./sql/003_create_pipeline_run_table.sql:/docker-entrypoint-initdb.d/003_create_pipeline_run_table.sql:ro
     healthcheck:
       test:
         - CMD-SHELL
