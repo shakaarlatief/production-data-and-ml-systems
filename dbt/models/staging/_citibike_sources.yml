@@ -1,0 +1,52 @@
+version: 2
+
+sources:
+  - name: citibike
+    description: >
+      PostgreSQL tables populated by the Python ingestion and validation stages.
+      dbt treats these existing relations as upstream sources rather than creating
+      or replacing them.
+    schema: staging
+    tables:
+      - name: trip_valid
+        identifier: citibike_trip_valid
+        description: One row per accepted raw Citi Bike source row.
+        columns:
+          - name: file_id
+            description: Identifier of the source file that contained the row.
+            data_tests:
+              - not_null
+          - name: source_row_number
+            description: One-based position of the record in the source CSV file.
+            data_tests:
+              - not_null
+          - name: ride_id
+            description: Provider-supplied identifier of the bicycle ride.
+            data_tests:
+              - not_null
+              - unique
+          - name: started_at
+            description: Parsed ride start timestamp from the source file.
+            data_tests:
+              - not_null
+          - name: ended_at
+            description: Parsed ride end timestamp from the source file.
+            data_tests:
+              - not_null
+
+      - name: trip_rejected
+        identifier: citibike_trip_rejected
+        description: One row per rejected raw Citi Bike source row.
+        columns:
+          - name: file_id
+            description: Identifier of the source file that contained the row.
+            data_tests:
+              - not_null
+          - name: source_row_number
+            description: One-based position of the record in the source CSV file.
+            data_tests:
+              - not_null
+          - name: rejection_reasons
+            description: One or more explicit validation reasons for rejection.
+            data_tests:
+              - not_null

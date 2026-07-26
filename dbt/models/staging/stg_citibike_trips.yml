@@ -1,0 +1,68 @@
+version: 2
+
+models:
+  - name: stg_citibike_trips
+    description: >
+      dbt-managed analytical interface to accepted Citi Bike trips. The model
+      preserves one row per accepted ride while adding convenient date, hour,
+      and duration-in-minutes fields for downstream models.
+    columns:
+      - name: ride_id
+        description: Provider-supplied identifier of the bicycle ride.
+        data_tests:
+          - not_null
+          - unique
+      - name: file_id
+        description: Identifier of the source file that contained the ride.
+        data_tests:
+          - not_null
+      - name: source_row_number
+        description: One-based position of the ride in the source CSV file.
+        data_tests:
+          - not_null
+      - name: rideable_type
+        description: Bicycle category reported by Citi Bike.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - classic_bike
+                  - electric_bike
+      - name: member_casual
+        description: Membership category reported for the ride.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - member
+                  - casual
+      - name: end_station_id_resolution_method
+        description: Method used to obtain the resolved end-station identifier.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - source
+                  - inferred_from_station_name
+                  - ambiguous_station_name
+                  - unavailable
+      - name: started_at
+        description: Parsed ride start timestamp.
+        data_tests:
+          - not_null
+      - name: ended_at
+        description: Parsed ride end timestamp.
+        data_tests:
+          - not_null
+      - name: duration_seconds
+        description: Positive ride duration measured in seconds.
+        data_tests:
+          - not_null
+      - name: ride_date
+        description: Calendar date derived from the ride start timestamp.
+        data_tests:
+          - not_null
+      - name: start_hour
+        description: Integer hour from 0 through 23 derived from the start timestamp.
+        data_tests:
+          - not_null

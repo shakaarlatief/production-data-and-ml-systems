@@ -1,0 +1,51 @@
+version: 2
+
+models:
+  - name: daily_citibike_activity
+    description: >
+      Daily Citi Bike activity summary at the grain of one row per ride date,
+      bicycle type, and membership category. Measures describe trip volume,
+      average duration, long trips, and selected endpoint-quality conditions.
+    columns:
+      - name: ride_date
+        description: Calendar date on which the rides started.
+        data_tests:
+          - not_null
+      - name: rideable_type
+        description: Bicycle category reported by Citi Bike.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - classic_bike
+                  - electric_bike
+      - name: member_casual
+        description: Membership category reported for the rides.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - member
+                  - casual
+      - name: trip_count
+        description: Number of rides in the date, bicycle-type, and membership group.
+        data_tests:
+          - not_null
+      - name: average_duration_minutes
+        description: Arithmetic mean ride duration in minutes within the group.
+        data_tests:
+          - not_null
+      - name: long_trip_count
+        description: Number of rides in the group lasting more than 24 hours.
+        data_tests:
+          - not_null
+      - name: missing_end_station_count
+        description: Number of rides in the group without a resolved end station.
+        data_tests:
+          - not_null
+      - name: missing_end_coordinates_count
+        description: Number of rides in the group without end coordinates.
+        data_tests:
+          - not_null
