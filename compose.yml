@@ -1,0 +1,24 @@
+name: production-data-and-ml-systems
+
+services:
+  postgres:
+    image: postgres:18.4
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DOCKER_DB_PORT:-5433}:5432"
+    volumes:
+      - citibike_postgres_data:/var/lib/postgresql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  citibike_postgres_data:
