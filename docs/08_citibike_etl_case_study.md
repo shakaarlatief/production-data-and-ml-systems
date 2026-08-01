@@ -2,11 +2,29 @@
 
 ## Purpose
 
-This case study provides the first practical implementation of a local, transparent data pipeline using Python, PostgreSQL, dbt Core, and a real public dataset.
+This case study provides the first practical implementation of a transparent, reproducible data pipeline using Python, PostgreSQL, dbt Core, Docker, and a real public dataset.
 
 It is a focused learning implementation within the wider production data and machine-learning systems programme. It is distinct from the long-term telecommunications integrated project described in `03_integrated_project_architecture.md`.
 
-The implementation is intentionally layered. Direct Python, the standard library, Psycopg 3, PostgreSQL, and explicit SQL are used first so that file ingestion, database interaction, transactions, validation, and lineage remain visible. dbt Core is then introduced for dependency-aware analytical transformations, data tests, materializations, and generated documentation. Orchestration, containers, distributed processing, and cloud services remain later phases.
+The implementation is intentionally layered. Direct Python, the standard library, Psycopg 3, PostgreSQL, and explicit SQL are introduced first so that file ingestion, database interaction, transactions, validation, and lineage remain visible. dbt Core is then used for dependency-aware analytical transformations, data tests, materializations, and generated documentation. Docker Compose is added afterward to reproduce the PostgreSQL environment without replacing the earlier direct implementation.
+
+The current design therefore separates three concerns:
+
+```text
+Python and Psycopg
+    file ingestion and typed validation
+
+PostgreSQL and explicit SQL
+    persistent schemas, tables, constraints, and data
+
+dbt Core
+    analytical transformations, tests, materializations, and lineage
+
+Docker Compose
+    reproducible PostgreSQL software, configuration, storage, and startup
+```
+
+Orchestration, continuous integration, cloud services, distributed processing, and MLOps remain later phases.
 
 ## Why Citi Bike was selected
 
@@ -103,13 +121,16 @@ No missing values were observed in the remaining columns.
 
 These findings distinguish unusual but usable records from records that would be technically invalid.
 
-## Local architecture
+## Current architecture
 
 ```text
 Official Citi Bike ZIP archive
               |
               v
 Local immutable raw file
+              |
+              v
+Python ingestion through Psycopg COPY
               |
               v
 source.citibike_file
@@ -137,7 +158,7 @@ analytics.daily_citibike_activity
         daily summary table
 ```
 
-The local PostgreSQL database is:
+The database is named:
 
 `bike_share_etl`
 
@@ -147,6 +168,18 @@ The schemas are:
 - `staging`;
 - `analytics`;
 - `operations`.
+
+The same logical pipeline has been verified against two separate PostgreSQL environments:
+
+```text
+Direct Windows PostgreSQL
+    localhost:5432
+
+Docker Compose PostgreSQL
+    localhost:5433
+```
+
+The Docker database is not a copy of the Windows database. It is a distinct instance whose structures and contents were recreated by executing repository-controlled SQL, Python, and dbt code.
 
 ## Raw landing layer
 
@@ -253,14 +286,14 @@ Soft conditions are preserved through explicit fields or flags rather than causi
 
 ## Staging validation result
 
-The January file was validated twice to test deterministic rerun behavior. Both executions produced the same result:
+The January file was validated repeatedly to test deterministic rerun behavior. The executions produced the same result:
 
 | Measure | Count |
 |---|---:|
 | Raw rows | 50,611 |
 | Valid rows | 50,611 |
 | Rejected rows | 0 |
-| Reconciliation | 50,611 + 0 = 50,611 |
+| Reconciliation | 50,611 = 50,611 + 0 |
 
 Observed quality flags among accepted rows:
 
@@ -271,7 +304,7 @@ Observed quality flags among accepted rows:
 | Trip longer than 24 hours | 21 |
 | Missing end coordinates | 19 |
 
-The second validation execution replaced the selected file's staging outcomes transactionally and reproduced the same counts without appending duplicates.
+A repeated validation execution replaces the selected file's staging outcomes transactionally and reproduces the same counts without appending duplicates.
 
 ## Automated Python validation
 
@@ -403,15 +436,15 @@ Project-specific SQL tests under `dbt/tests/` verify:
 
 A singular test returns invalid records. Zero returned rows means the test passes.
 
-Verified selected dependency-chain build:
+The complete build against the Docker PostgreSQL service produced:
 
 ```text
-Found 2 models, 34 data tests, 2 sources
-Finished running 31 data tests, 2 models
-PASS=33 WARN=0 ERROR=0 SKIP=0 TOTAL=33
+Found 2 models, 34 data tests, 2 sources, 477 macros
+Finished running 1 table model, 34 data tests, 1 view model
+PASS=36 WARN=0 ERROR=0 SKIP=0 NO-OP=0 REUSED=0 TOTAL=36
 ```
 
-The three generic tests attached only to the rejected-record source were not selected because that source is not an upstream dependency of the daily mart.
+The total consists of 34 tests plus two model-building operations.
 
 ## dbt documentation and lineage
 
@@ -430,9 +463,226 @@ citibike.trip_valid
 
 The generated interface also exposes model descriptions, column descriptions, data types, materializations, tests, compiled SQL, and upstream and downstream relationships.
 
+## Docker Compose PostgreSQL environment
+
+### Compose configuration
+
+The repository contains `compose.yml` with a project-level name:
+
+```text
+production-data-and-ml-systems
+```
+
+The current Compose project defines one service:
+
+```text
+postgres
+```
+
+The service uses the official image:
+
+```text
+postgres:18.4
+```
+
+An image is the reusable software template. A container is the running instance created from that image. The current project pulls the official PostgreSQL image rather than building a custom PostgreSQL image.
+
+### Environment configuration
+
+The PostgreSQL service reads:
+
+- `DB_NAME`;
+- `DB_USER`;
+- `DB_PASSWORD`.
+
+The host port reads:
+
+- `DOCKER_DB_PORT`, defaulting to `5433` when absent.
+
+Private values remain in the ignored `.env` file. `.env.example` documents the required variable names without containing private credentials.
+
+### Port mapping
+
+The service maps:
+
+```text
+host port 5433
+        ->
+container port 5432
+```
+
+This preserves the existing Windows PostgreSQL instance at `localhost:5432` while exposing the Docker PostgreSQL instance at `localhost:5433`.
+
+From the host:
+
+```text
+localhost:5433
+```
+
+reaches PostgreSQL inside the container at:
+
+```text
+postgres container port 5432
+```
+
+### Persistent named volume
+
+The service uses:
+
+```text
+citibike_postgres_data
+```
+
+mounted at:
+
+```text
+/var/lib/postgresql
+```
+
+The named volume stores PostgreSQL's database files outside the disposable container layer. Stopping or recreating the container does not automatically delete the database contents.
+
+The commands have deliberately different persistence behavior:
+
+```text
+docker compose down
+    removes containers and the Compose network
+    preserves the named volume
+
+docker compose down --volumes
+    also removes the named volume and its database contents
+```
+
+### Database initialization bind mounts
+
+The existing repository-controlled SQL files are mounted read-only into:
+
+```text
+/docker-entrypoint-initdb.d/
+```
+
+Mounted files:
+
+1. `001_create_citibike_raw_tables.sql`
+2. `002_create_citibike_staging_tables.sql`
+3. `003_create_pipeline_run_table.sql`
+
+A bind mount exposes a host file inside the container. The `:ro` suffix means the container can read the file but cannot modify the repository copy.
+
+On first initialization of an empty data volume, the official PostgreSQL entrypoint executes these files in alphabetical order. They create:
+
+- the `source` schema and its two tables;
+- the `staging` schema and its two tables;
+- the `operations` schema and `pipeline_run` table.
+
+The initialization scripts do not create the dbt analytical objects. They also do not currently create the `analytics` schema. dbt creates that schema and its models during `dbt build`.
+
+Initialization scripts execute only when the PostgreSQL data directory is empty. Mounting a new script into an already initialized volume does not retroactively execute it. This behavior was verified by initially observing only the `public` schema, then recreating the empty volume and confirming that all foundational schemas and tables were created.
+
+### Health check
+
+The service uses `pg_isready` to test whether PostgreSQL accepts connections for the configured database and user.
+
+The health check separates two states:
+
+```text
+container process is running
+```
+
+and:
+
+```text
+PostgreSQL is ready for database connections
+```
+
+The verified service status was:
+
+```text
+Up and healthy
+0.0.0.0:5433->5432/tcp
+```
+
+## Containerized database reproduction
+
+The fresh Docker PostgreSQL environment was populated through the same existing pipeline rather than through a database backup or manual copy.
+
+The reproduction sequence was:
+
+```text
+1. Docker Compose starts PostgreSQL 18.4
+2. Initialization SQL creates empty foundational schemas and tables
+3. Host Python connects through localhost:5433
+4. Python loads the CSV into source tables
+5. Python validates the raw records into staging tables
+6. Host dbt connects through localhost:5433
+7. dbt creates the analytics schema, view, and table
+8. dbt executes all generic and singular tests
+```
+
+The Python and dbt processes still ran from the Windows `.venv`. Only PostgreSQL was containerized in this milestone.
+
+## End-to-end verification evidence
+
+### Foundational schemas
+
+After initialization, PostgreSQL contained:
+
+- `public`;
+- `source`;
+- `staging`;
+- `operations`.
+
+After dbt execution, PostgreSQL also contained:
+
+- `analytics`.
+
+### Foundational tables
+
+Verified tables:
+
+| Schema | Table |
+|---|---|
+| `source` | `citibike_file` |
+| `source` | `citibike_trip_raw` |
+| `staging` | `citibike_trip_valid` |
+| `staging` | `citibike_trip_rejected` |
+| `operations` | `pipeline_run` |
+
+### Row-count reconciliation
+
+Verified row counts in the Docker database:
+
+| Layer | Relation | Rows |
+|---|---|---:|
+| Raw | `source.citibike_trip_raw` | 50,611 |
+| Validated | `staging.citibike_trip_valid` | 50,611 |
+| Rejected | `staging.citibike_trip_rejected` | 0 |
+| dbt staging | `analytics.stg_citibike_trips` | 50,611 |
+| dbt mart | `analytics.daily_citibike_activity` | 126 |
+
+The equality
+
+```text
+50,611 raw = 50,611 valid + 0 rejected
+```
+
+confirms that every raw row was accounted for by the validation layer.
+
+The ride-level dbt view also contains 50,611 rows because it preserves the staging grain. The daily mart contains 126 rows because it changes the grain to one row per date, bicycle type, and membership category.
+
+### Relation-type verification
+
+PostgreSQL reported:
+
+| Relation | Type |
+|---|---|
+| `analytics.stg_citibike_trips` | `VIEW` |
+| `analytics.daily_citibike_activity` | `BASE TABLE` |
+
+This confirms that the dbt materialization configuration was applied as intended.
+
 ## Reliability properties implemented
 
-The local pipeline now demonstrates:
+The pipeline now demonstrates:
 
 - immutable raw source handling;
 - schema-drift detection;
@@ -451,7 +701,13 @@ The local pipeline now demonstrates:
 - view and table materialization strategies;
 - generic and project-specific dbt data tests;
 - analytical reconciliation;
-- generated documentation and lineage.
+- generated documentation and lineage;
+- reproducible PostgreSQL software through an official Docker image;
+- isolated host and container ports;
+- persistent database storage through a named volume;
+- automatic foundational-schema initialization on an empty volume;
+- health-aware service readiness;
+- successful execution of the existing Python and dbt workflow against a fresh containerized database.
 
 ## Current progress
 
@@ -462,7 +718,6 @@ Completed:
 - local secrets separated through an ignored `.env` file;
 - Python-to-PostgreSQL connection verified;
 - `bike_share_etl` database created;
-- `source`, `staging`, `analytics`, and `operations` schemas created;
 - official January 2025 Jersey City trip data downloaded;
 - raw-data directory excluded from Git;
 - source structure, missingness, categories, identifiers, timestamps, durations, coordinates, and station mappings profiled;
@@ -482,24 +737,44 @@ Completed:
 - ride-level staging view built and tested;
 - daily analytical mart table built and tested;
 - custom grain, bounds, and reconciliation tests implemented;
-- generated dbt documentation and lineage verified.
+- generated dbt documentation and lineage verified;
+- Docker Desktop and Docker Compose workflow introduced;
+- PostgreSQL 18.4 service defined in `compose.yml`;
+- persistent named volume configured;
+- separate host port `5433` configured;
+- PostgreSQL health check configured;
+- SQL initialization files mounted read-only;
+- fresh-volume initialization behavior verified;
+- Python ingestion and validation executed against the Docker database;
+- dbt debug and complete dbt build executed against the Docker database;
+- all 34 dbt data tests passed;
+- final row counts and relation types verified.
 
-## Immediate next steps
+## Current boundary
 
-1. Introduce Docker images, containers, registries, ports, networks, and volumes.
-2. Define a PostgreSQL service without modifying the existing local database installation.
-3. Use Docker Compose for reproducible multi-service configuration.
-4. Add persistent named volumes and database health checks.
-5. connect the existing Python and dbt workflows to containerized PostgreSQL;
-6. verify startup, shutdown, rebuild, and persistence behavior;
-7. add orchestration and continuous integration only after the containerized local environment is stable.
+The current case study covers a local batch ETL and analytics-engineering workflow with a containerized PostgreSQL database.
 
-## Scope boundary
+Containerized:
 
-This case study currently covers a local batch ETL and analytics-engineering workflow. It does not yet include:
+- PostgreSQL software;
+- PostgreSQL configuration;
+- PostgreSQL storage;
+- foundational schema initialization.
 
-- containers;
+Not yet containerized:
+
+- Python runtime;
+- project package and dependencies;
+- Psycopg execution;
+- pytest and Ruff execution;
+- dbt Core and dbt-postgres execution.
+
+Not yet implemented:
+
+- automatic writes to `operations.pipeline_run`;
+- structured production logging;
 - workflow orchestration;
+- continuous integration;
 - cloud storage or cloud databases;
 - distributed processing;
 - streaming ingestion;
@@ -507,4 +782,14 @@ This case study currently covers a local batch ETL and analytics-engineering wor
 - deployment;
 - production monitoring.
 
-Those capabilities will be introduced later when the local implementation provides concrete requirements and reusable foundations.
+## Immediate next steps
+
+1. Create a project `Dockerfile` based on Python 3.11.
+2. Add `.dockerignore` so secrets, the host virtual environment, generated artifacts, and raw data are excluded from the image build context unless deliberately required.
+3. Install the repository and development dependencies inside the application image.
+4. Add an application service to `compose.yml`.
+5. Configure the application container to connect to PostgreSQL through the Compose service hostname `postgres` and container port `5432`.
+6. Use the PostgreSQL health check as a dependency condition for database-dependent application commands.
+7. Run connection checks, tests, raw ingestion, validation, and dbt from inside the application container.
+8. Verify that the full software environment can be reproduced using Docker without host-installed Python packages or dbt.
+9. Add orchestration and continuous integration only after the containerized local workflow is stable.
