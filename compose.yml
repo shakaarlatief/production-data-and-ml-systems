@@ -23,5 +23,26 @@ services:
       retries: 10
       start_period: 10s
 
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./.env:/app/.env:ro
+      - ./data/raw:/app/data/raw:ro
+    command:
+      - python
+      - -m
+      - bike_share_etl.check_database_connection
+
 volumes:
   citibike_postgres_data:
