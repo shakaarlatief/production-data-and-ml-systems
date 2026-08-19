@@ -1,12 +1,61 @@
 # Production Data and ML Systems
 
-This repository is a structured learning and portfolio project for building the knowledge required to move from local Python or R analysis toward professional data, cloud, and machine-learning systems.
+A structured learning and portfolio project focused on the engineering required to move from local Python or R analysis toward professional data, cloud, and machine-learning systems.
 
-It is separate from the Telco Customer Churn classification project. The purpose here is not primarily to compare predictive models. The purpose is to understand and implement the surrounding systems that organizations use to collect, store, transform, schedule, deploy, monitor, and maintain data and machine-learning workloads.
+The project is deliberately built in dependency order. Technologies are introduced as solutions to concrete engineering problems and are applied in small implementations before the scope expands to larger production systems.
 
-## Learning scope
+## Current implementation
 
-The programme covers:
+The practical case study currently uses official Citi Bike trip-history data to build a reproducible batch data pipeline. The implemented system includes:
+
+- Python-based source profiling, ingestion, and validation;
+- PostgreSQL raw, staging, operations, and analytics layers;
+- SHA-256 file registration and rerun-safe ingestion;
+- explicit accepted and rejected validation outcomes;
+- raw-to-staging reconciliation and data-quality checks;
+- automated Python unit tests and Ruff checks;
+- a persistent pipeline-run audit-table design;
+- a dbt Core analytics project with declared sources, staging models, marts, generic tests, singular tests, documentation, and lineage;
+- a Docker Compose PostgreSQL environment with persistent storage, health checks, environment-based configuration, and automatic foundational-schema initialization.
+
+The current infrastructure milestone is containerizing the Python and dbt execution environment so the full workflow can run without depending on host-installed Python packages.
+
+## Current stack
+
+- Python 3.11
+- PostgreSQL 18
+- Psycopg 3
+- SQL
+- dbt Core
+- Docker and Docker Compose
+- Pytest
+- Ruff
+
+## Architecture developed so far
+
+```text
+source file
+    |
+    v
+source.citibike_file
+source.citibike_trip_raw
+    |
+    v
+staging.citibike_trip_valid
+staging.citibike_trip_rejected
+    |
+    v
+dbt staging view
+    |
+    v
+analytics.daily_citibike_activity
+```
+
+The implementation keeps the grain and responsibility of each layer explicit. Raw source values are preserved, validation produces typed accepted or rejected outcomes, analytical transformations are handled separately, and reconciliation checks verify that records are not silently lost between stages.
+
+## Broader learning scope
+
+The repository is also the roadmap for a larger end-to-end production learning programme covering:
 
 1. SQL and relational databases
 2. Data modelling and analytical dataset construction
@@ -22,24 +71,23 @@ The programme covers:
 12. Kubernetes, Terraform, security, monitoring, and production operations
 13. An integrated end-to-end production project
 
-## Learning philosophy
+## Learning and engineering principles
 
-The repository follows several principles:
+The project follows several principles:
 
 - Concepts are learned in dependency order.
-- Technologies are introduced as solutions to concrete problems, not as isolated product names.
-- Every new keyword, function, symbol, and piece of syntax is explained before it is relied on.
-- Small examples are used before larger implementations.
+- Technologies are introduced as solutions to concrete problems rather than as isolated product names.
 - Input data, transformations, output data, and row grain are made explicit.
-- Theory, guided exercises, independent exercises, and project application are tracked separately.
-- Local implementations are developed before equivalent cloud implementations where possible.
+- Small examples precede larger implementations.
+- Theory, guided work, independent work, and project application are tracked separately.
+- Local implementations are developed before equivalent cloud implementations where useful.
 - Storage technologies are selected from workload requirements rather than from a relational-versus-NoSQL slogan.
 - Documentation is written as a standalone technical reference that can be revisited later.
-- Exploratory exercises are not committed automatically. Repository artifacts are selected deliberately when they form a reusable implementation, meaningful milestone, polished example, or part of the integrated system.
+- Repository artifacts are selected deliberately when they form a reusable implementation, meaningful milestone, polished example, or part of the integrated system.
 
 ## Repository documentation
 
-The main planning and coordination documents are located in `docs/`:
+The main planning and technical documents are located in `docs/`:
 
 - `00_master_learning_map.md`: complete programme and dependency order
 - `01_current_status_and_next_actions.md`: active phase, current lesson, and immediate work
@@ -49,17 +97,10 @@ The main planning and coordination documents are located in `docs/`:
 - `05_glossary.md`: definitions and distinctions between related terms
 - `06_documentation_workflow.md`: documentation roles and update rules
 - `07_industry_tooling_landscape.md`: industry-facing map of tools, priorities, alternatives, and planned learning phases
-- `08_citibike_etl_case_study.md`: first practical ETL implementation using official Citi Bike trip-history data
-- `roadmaps/`: detailed roadmap for each major subject area, including relational and specialized data stores
-
-## Current phase
-
-The active phase is ETL, ELT, and data pipelines.
-
-The SQL and relational-database foundation has reached the checkpoint required to continue. PostgreSQL 18 and pgAdmin have been used locally with a small `telecom_operations` database, operational and analytical schemas, related customer and invoice tables, constraints, transactions, reusable query objects, indexes, and analytical transformations.
-
-The first practical ETL case study uses official January 2025 Jersey City Citi Bike trip-history data. The local implementation now includes detailed source profiling, SHA-256-based file registration, transactional raw ingestion through PostgreSQL `COPY`, immutable source-row lineage, typed staging validation, accepted and rejected outcomes, deterministic station-ID inference, soft quality flags, raw-to-staging reconciliation, and rerun-safe processing. The immediate objective is to add automated tests and logging, centralize shared configuration, and design the first analytics-layer models.
+- `08_citibike_etl_case_study.md`: detailed practical ETL case study
+- `09_docker_compose_postgresql.md`: containerized PostgreSQL milestone
+- `roadmaps/`: detailed roadmap for each major subject area
 
 ## Intended result
 
-The long-term result will be a professional, portfolio-ready system that demonstrates how data moves from operational sources through storage, transformation, orchestration, machine-learning training, deployment, monitoring, and retraining. It will also document when relational, document, key-value, graph, wide-column, search, time-series, and vector-oriented storage models are appropriate.
+The long-term goal is a professional, portfolio-ready system that demonstrates how data moves from operational sources through storage, transformation, orchestration, machine-learning training, deployment, monitoring, and retraining, while documenting the design choices and trade-offs along the way.
